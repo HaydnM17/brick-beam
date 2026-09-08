@@ -512,6 +512,14 @@ between, `padding: clamp(80px,10vw,150px) clamp(20px,5vw,96px)`.
 Centred intro, then a third marquee (`data-rate="0.18"`, 84s) carrying review cards.
 `animation-play-state: paused` on hover. Links out to Google Maps for the business.
 
+**Placeholder content.** The quotes, the "4.5" rating, and the "from your reviews on Google" line
+are sample text for this mockup, not real Google reviews — the business doesn't have its live
+Google listing linked up yet. A small annotation directly under the "Reviews" eyebrow says so
+(`Sample text for this mockup. Real Google reviews go here.`, 11px uppercase, letter-spaced,
+`#B5AB9C`), and each quote's `<footer>` reads "Placeholder review" rather than "Google review
+highlight". Swap in the real rating, review count, and quotes once the Google listing is live, and
+remove the annotation and footer wording at the same time.
+
 ### 10. "Find us" (`#find`)
 
 Background `rgba(11,9,8,.5)`. Address, hours, an **Open now / Closed** pill computed live against
@@ -864,6 +872,20 @@ wordmark row ending 86px short of its container and no wrap. The hero and footer
 0.01px and 0.03px, with the footer patch's row rendering at 11px and its "Co" at 7.7px, as measured.
 Nothing wraps or overflows at either width.
 
+**Current implementation — everything above is superseded.** The raster/`potrace`/`data-bb="amp"`
+system described in this whole "Wordmark treatment" section was the state through several passes,
+but the page now renders the wordmark from two traced vectors instead: `assets/wordmark-full.svg`
+(viewBox `0 0 1683 128`, the full "BRICK & BEAM COFFEE CO" mark, used in the header only) and
+`assets/wordmark-brickbeam.svg` (viewBox `0 0 1023 128`, the "BRICK & BEAM" patch, used in the hero
+band, all four marquee copies, and the footer endmark). Both are applied as CSS masks through a
+single `.bb-wm` class (`-webkit-mask-image`/`mask-image`, `background-color: currentColor`), so each
+instance inherits brass or cream from its surrounding context and stays pixel-sharp at any size with
+no separate brass/cream raster pair to keep in sync. All former `data-bb="amp"` wrapper spans and
+their underline `::after` CSS are gone — there is no separate ampersand glyph, underline rule, or
+baseline-compensation math left in the page; the wordmark vectors carry the full lockup, ampersand
+included, as one shape per instance. Treat the whole narrative above as historical record of how the
+design got here, not as a description of the current markup.
+
 ### Spacing
 
 Section padding `clamp(88px, 11vw, 176px)` vertical (the shop opens wider at
@@ -891,16 +913,18 @@ and from the vignette. The header's only shadow is a 1px hairline.
 | `assets/film-end-portrait.jpg` | Final frame of the portrait film, the full cup with steam | Footer static fallback on portrait phones and tablets |
 | `assets/film-still-portrait.jpg` | Frame at 6.0s of the portrait film | Approved still, no longer referenced by the page |
 | `assets/full text logo.png` | Client-supplied reference | The official text logo, "BRICK & BEAM COFFEE CO" in Big Shoulders Display 900, 582×52, cream background. Source for every wordmark asset below. |
-| `assets/wordmark-brass.png` | Cut from the reference above (Higgsfield sandbox, ImageMagick: 3x Lanczos upscale, `-fuzz 12% -transparent` keyed on the cream background, then recoloured) | Full "BRICK & BEAM COFFEE CO" wordmark, transparent background, brass `#C9A54E`, 1695×140. Not currently wired into the page; kept as a reference/print asset. |
-| `assets/wordmark-cream.png` | Same as above, recoloured cream `#E9E3D3` | 1695×140, transparent background |
+| `assets/wordmark-full.svg` | Traced from the reference logo above | Vector, viewBox `0 0 1683 128`, the full "BRICK & BEAM COFFEE CO" lockup. Applied as a CSS mask (`.bb-wm`, `background-color: currentColor`) in the header only, so it renders in brass there and can take any colour elsewhere without a separate raster per colour. **Current wordmark asset — supersedes the raster/`amp-haydn` system described in "Wordmark treatment" under Typography.** |
+| `assets/wordmark-brickbeam.svg` | Traced the same way, the "BRICK & BEAM" patch only | Vector, viewBox `0 0 1023 128`. Same `.bb-wm` mask technique, used in the hero patch band, all four marquee copies, and the footer endmark. |
+| `assets/wordmark-brass.png` | Cut from the reference above (Higgsfield sandbox, ImageMagick: 3x Lanczos upscale, `-fuzz 12% -transparent` keyed on the cream background, then recoloured) | Full "BRICK & BEAM COFFEE CO" wordmark, transparent background, brass `#C9A54E`, 1695×140. **Not referenced by the page** — superseded by the `.svg` masks above; kept as a reference/print asset. |
+| `assets/wordmark-cream.png` | Same as above, recoloured cream `#E9E3D3` | 1695×140, transparent background. **Not referenced by the page.** |
 | `assets/amp-brass.png` | Cropped from the keyed wordmark, glyph only, no underline | 87×104, brass. **No longer referenced by the page.** Kept on disk, unused. |
 | `assets/amp-cream.png` | Same crop, recoloured cream | 87×104. **No longer referenced.** Kept on disk, unused. |
 | `assets/amp-underline-brass.png` | Same crop with the underline included | 88×129, brass. **No longer referenced.** Kept on disk, unused. |
 | `assets/amp-underline-cream.png` | Same crop with the underline included, recoloured cream | 88×129. **No longer referenced.** Kept on disk, unused. |
-| `assets/amp_haydn.png` | Client-supplied, the brand's real ampersand artwork | 1080×1080, decorative brass glyph with a subtly speckled texture, clean alpha (already transparent — not a flattened white background), wide margin. Source for every asset below. Kept as the master original. |
-| `assets/amp-haydn-brass.png` | Trimmed to ink bounds (`-trim +repage`, ImageMagick, Higgsfield sandbox) and recoloured `#C9A54E` by mapping the glyph's own grayscale onto the flat colour (Overlay blend), keeping the speckle texture tinted rather than flattened | 366×452, transparent background, brass. Used for the header wordmark and footer endmark. |
-| `assets/amp-haydn-cream.png` | Same trim, recoloured `#E9E3D3` the same way | 366×452, transparent background, cream. Used for the four marquee "BRICK & BEAM" copies. |
-| `assets/amp-haydn.svg` | Traced from the trimmed alpha with `potrace` (`potracer` Python package) | Vector, 366×452 viewBox, 2 closed paths (outer silhouette + the ampersand's one enclosed counter), flat silhouette (no texture — masks discard source colour). Used as a `mask-image` for the "What we pour" badge's ghost and fill layers, where its infinite sharpness suits the badge's large size better than the raster. |
+| `assets/amp_haydn.png` | Client-supplied, the brand's real ampersand artwork | 1080×1080, decorative brass glyph with a subtly speckled texture, clean alpha (already transparent — not a flattened white background), wide margin. Kept as the master original for `amp-haydn.svg` below. |
+| `assets/amp-haydn-brass.png` | Trimmed to ink bounds (`-trim +repage`, ImageMagick, Higgsfield sandbox) and recoloured `#C9A54E` by mapping the glyph's own grayscale onto the flat colour (Overlay blend), keeping the speckle texture tinted rather than flattened | 366×452, transparent background, brass. **No longer referenced** — the header wordmark and footer endmark now render from the `.svg` wordmarks above, not this raster. |
+| `assets/amp-haydn-cream.png` | Same trim, recoloured `#E9E3D3` the same way | 366×452, transparent background, cream. **No longer referenced** — the four marquee copies now render from `wordmark-brickbeam.svg`. |
+| `assets/amp-haydn.svg` | Traced from the trimmed alpha with `potrace` (`potracer` Python package) | Vector, 366×452 viewBox, 2 closed paths (outer silhouette + the ampersand's one enclosed counter), flat silhouette (no texture — masks discard source colour). **Still used**, as a `mask-image` for the "What we pour" badge's ghost and fill layers only — the badge is a standalone ampersand mark, not part of the wordmark lockup. |
 
 **Ampersand: the brand's own artwork, not live type.** The page's ampersands were live Big
 Shoulders Display 900 type prior to this pass (see the git history / prior revision of this
@@ -931,11 +955,23 @@ If the target codebase has an existing brand system, defer to it for anything no
 
 | File | What it is |
 |---|---|
-| `Brick & Beam v3.dc.html` | The full design — markup, styles, and page logic. The reference. |
+| `Brick & Beam v3.dc.html` | The full design — markup, styles, and page logic. The working source of truth; edit this file, never `index.html`. |
+| `index.html` | **Generated.** A byte-for-byte copy of `Brick & Beam v3.dc.html`, produced by `deploy.ps1` because GitHub Pages needs an `index.html` at the repo root. Never edit this directly — it gets overwritten on every deploy. |
 | `film-engine.js` | Scroll→film engine: mapping, seek gate, WebGL upscaler, all scroll effects. Worth porting closely. |
 | `support.js` | Prototype runtime glue. Not part of the design; ignore. |
-| `assets/` | Video and stills. |
+| `assets/` | Video, stills, and the wordmark SVGs/PNGs. |
+| `deploy.ps1` | Copies the `.dc.html` source to `index.html`, stages an explicit list of files (never `git add -A`, since other sessions may be mid-write), commits, and pushes to `origin main`. Run as `.\deploy.ps1 "commit message"`. |
 
-To view the prototype: serve the folder over HTTP (`python3 -m http.server`) and open
+To view the prototype locally: serve the folder over HTTP (`python3 -m http.server`) and open
 `Brick & Beam v3.dc.html`. Opening it from `file://` will not work — the video is fetched via
 `XMLHttpRequest`.
+
+### Deployment
+
+The site is live on GitHub Pages at **https://haydnm17.github.io/brick-beam/**, deployed from the
+public repo `HaydnM17/brick-beam` (this bundle's git remote). `deploy.ps1` is the only supported way
+to publish a change: it regenerates `index.html` from the `.dc.html` source and pushes to `main`,
+which GitHub Pages serves directly — there is no separate build step. Because `<title>` and the
+Open Graph/Twitter meta tags live in the real `<head>` (not just inside the `<helmet>` block that
+`support.js` injects at runtime), link previews in messaging apps and social platforms work without
+needing JavaScript to run.

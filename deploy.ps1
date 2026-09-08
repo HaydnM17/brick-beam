@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Redeploy the Brick & Beam mockup to GitHub Pages.
 
