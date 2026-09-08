@@ -157,8 +157,8 @@
       // portraitIntroEnd has to land inside the pour zone, below portraitZones[0], or the intro hands the
       // playhead over past the frame the hero scroll is aiming at and the hero has nothing left to scrub.
       // 0.16 (~2.73s) lands safely past the drip becoming a continuous stream (~2.0s) and stays below
-      // portraitZones[0] (0.29, ~4.94s), which is where the hero's scrub range now ends.
-      portraitStart: 0, portraitZoom: 1, portraitZones: [0.29, 0.751], portraitIntroEnd: 0.16,
+      // portraitZones[0] (0.42, ~7.16s), which is where the hero's scrub range now ends.
+      portraitStart: 0, portraitZoom: 1, portraitZones: [0.42, 0.751], portraitIntroEnd: 0.16,
       heroVh: 360, sharpen: 0.7, contrast: 1.05, dim: 0.72, intro: true, introEase: 0.35
     }, opts || {});
     const q = (s, el) => (el || root).querySelector(s);

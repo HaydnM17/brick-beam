@@ -165,8 +165,8 @@ the numbers differ.
 
 | Zone | Scroll range | Film progress | Seconds | What the viewer sees |
 |---|---|---|---|---|
-| Pour | `0 → zoneA` (end of the 360vh hero) | `portraitStart → portraitZones[0]` | 0 → 4.94 | Drops fall from the basket and thicken into a continuous stream, the basket leaves the top of frame, and the fall continues |
-| Stream | `zoneA → zoneB` (top of the footer, minus 50vh) | `portraitZones[0] → portraitZones[1]` | 4.94 → 12.8 | The falling stream alone against darkness; the cup rim creeps in at the bottom edge from about 8 s |
+| Pour | `0 → zoneA` (end of the 360vh hero) | `portraitStart → portraitZones[0]` | 0 → 7.16 | Drops fall from the basket and thicken into a continuous stream, the basket leaves the top of frame, and the fall continues |
+| Stream | `zoneA → zoneB` (top of the footer, minus 50vh) | `portraitZones[0] → portraitZones[1]` | 7.16 → 12.8 | The falling stream alone against darkness; the cup rim creeps in at the bottom edge from about 8 s |
 | Cup | `zoneB → maxScroll` | `portraitZones[1] → 1.0` | 12.8 → 17.04 | The stream pours into the cup, the level rises, the last drops land, the full cup settles with steam |
 
 Current values, passed at init:
@@ -177,7 +177,7 @@ Current values, passed at init:
 
   portraitVideoSrc: 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg',
   portraitVideoBytes: 4104064,
-  portraitStart: 0, portraitZones: [0.29, 0.751], portraitZoom: 1, portraitIntroEnd: 0.16,
+  portraitStart: 0, portraitZones: [0.42, 0.751], portraitZoom: 1, portraitIntroEnd: 0.16,
 
   heroVh: 360, sharpen: 0.7, contrast: 1.05, dim: 0.72,
   intro: true, introEase: 0.35 }
@@ -190,7 +190,7 @@ New engine options and their defaults, all of them the portrait half of an exist
 | `portraitVideoSrc` | `'assets/hero-film-portrait.mp4'` | The portrait film. Falsy disables the swap entirely and the landscape film plays everywhere |
 | `portraitPosterSrc` | `'assets/film-poster-portrait.jpg'` | Painted on the poster layer while the portrait film loads |
 | `portraitVideoBytes` | `4104064` | Fallback total for the progress ring when the response has no `Content-Length` |
-| `portraitZones` | `[0.29, 0.751]` | Pour end and stream end, as a fraction of the portrait film |
+| `portraitZones` | `[0.42, 0.751]` | Pour end and stream end, as a fraction of the portrait film |
 | `portraitStart` | `0` | Where the mapping begins, as a fraction of the portrait film |
 | `portraitIntroEnd` | `0.16` | Where the intro hands the playhead to scroll, as a fraction of the portrait film |
 | `portraitZoom` | `1` | UV pull-back for the portrait film. 1.0, because it already fills a tall screen |
@@ -206,9 +206,9 @@ many frames the content scroll has to move through.
 the playhead over past the pour mark if `introEnd` is set beyond `zones[0]`, and the scrub must only
 ever run forwards. Keep an `introEnd` below its film's `zones[0]` anyway, or the hero has nothing left
 to scrub through. `portraitIntroEnd: 0.16` (~2.73 s) lands safely past the drip becoming a continuous
-stream at ~2.0 s and stays comfortably below `portraitZones[0]` (`0.29`, ~4.94 s), so the intro always
+stream at ~2.0 s and stays comfortably below `portraitZones[0]` (`0.42`, ~7.16 s), so the intro always
 hands off inside footage the hero still has left to scrub. `portraitZones[0]` was widened from `0.117`
-to `0.29` for the same reason from the other direction: at `0.117` the hero's whole scroll runway
+to `0.29` and later to `0.42` for the same reason from the other direction: at `0.117` the hero's whole scroll runway
 mapped to just the first 2.0 s of film, cutting the intro's hand-off point off before the drip had
 even become a stream.
 

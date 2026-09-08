@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brick &amp; Beam Coffee Co · Beamsville, Ontario</title>
 <meta name="description" content="A coffee shop in a red brick heritage building on King Street in Beamsville, Ontario. Open 7:00am to 5:00pm every day.">
 <meta name="robots" content="noindex">
@@ -23,7 +23,7 @@
 <x-dc>
 <helmet>
 <meta name="robots" content="noindex">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0B0908">
 <meta name="description" content="Brick &amp; Beam Coffee Co. A coffee shop in a red brick heritage building at 4979 King St, Beamsville, Ontario. Open 7:00am to 5:00pm every day.">
 <title>Brick &amp; Beam Coffee Co · Beamsville, Ontario</title>
@@ -32,10 +32,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&amp;family=Libre+Franklin:wght@400;500&amp;family=Mr+Dafoe&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script src="./film-engine.js"></script>
 <style>
-html{scroll-behavior:smooth;overflow-x:hidden;overflow-x:clip}
+html{scroll-behavior:smooth;overflow-x:hidden;overflow-x:clip;color-scheme:dark}
 body{margin:0;background:#0B0908;color:#E9E3D3;font-family:'Libre Franklin',system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;overflow-x:clip}
 ::selection{background:#C9A54E;color:#15110E}
 ::placeholder{color:#7A7064;opacity:1}
@@ -143,10 +143,11 @@ a,button{-webkit-tap-highlight-color:transparent}
   [data-bb="header"]{flex-wrap:wrap!important;gap:0!important;padding:0 max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left))!important}
   [data-bb="header"]>a{flex:1 0 100%;min-height:48px;align-items:center!important;white-space:nowrap}
   /* The wordmark has its own full-width row here, so the Coffee Co tag beside it fits and stays. */
-  [data-bb="header"] nav{flex:1 0 100%;min-height:48px;gap:0!important;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(90deg,#000 88%,rgba(0,0,0,0) 100%)}
+  [data-bb="header"] nav{flex:1 0 100%;min-height:48px;gap:0!important;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none}
   [data-bb="header"] nav::-webkit-scrollbar{display:none}
   [data-bb="header"] nav>a{flex:none;display:inline-flex;align-items:center;min-height:48px;padding-right:22px;font-size:11px!important;letter-spacing:0.14em!important;white-space:nowrap;text-shadow:0 1px 2px rgba(6,4,3,.95),0 3px 12px rgba(6,4,3,.78)}
   [data-bb="header"] nav>a:last-child{padding-right:8px}
+  .bb-nav-lg{display:none}
   #main,#shop,#pour,#room,#club,#reviews,#find{scroll-margin-top:104px}
 }
 /* A fixed 100vh stage fights the iOS toolbar; svh keeps the bottom of a band on screen. */
@@ -273,8 +274,8 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
     <span aria-hidden="true" class="bb-wm" style="font-size:24px;aspect-ratio:1683/128;-webkit-mask-image:url(assets/wordmark-full.svg);mask-image:url(assets/wordmark-full.svg)"></span>
   </a>
   <nav aria-label="Primary" style="display:flex;align-items:center;gap:clamp(14px,2.2vw,28px)">
-    <a data-bb="nav-extra" href="#pour" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">What we pour</a>
-    <a data-bb="nav-extra" href="#room" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">The room</a>
+    <a data-bb="nav-extra" href="#pour" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E"><span class="bb-nav-lg">What we </span>pour</a>
+    <a data-bb="nav-extra" href="#room" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E"><span class="bb-nav-lg">The </span>room</a>
     <a href="#find" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">Find us</a>
     <a href="https://www.instagram.com/brickandbeamcoffee" target="_blank" rel="noreferrer" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">Instagram</a>
   </nav>
@@ -284,7 +285,7 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
 <main id="main" tabindex="-1" style="outline:none;position:relative;z-index:1;animation:bbPageIn .9s ease-out both">
 
 <section data-bb="hero" data-screen-label="Hero (the pour)" style="position:relative;height:360vh">
-  <div data-bb="stage" style="position:sticky;top:0;height:100vh;overflow:hidden">
+  <div data-bb="stage" style="position:sticky;top:0;height:100svh;overflow:hidden">
 
     <div class="bb-band bb-e-rise" data-band="0,0.42" data-fade="0.05" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,700px);isolation:isolate;opacity:1;--sa:.72;--sb:.48;text-align:center">
       <div class="bb-glide" style="display:flex;flex-direction:column;align-items:center;gap:10px;will-change:transform">
@@ -514,7 +515,7 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
 <section id="reviews" data-screen-label="Reviews" style="position:relative;padding:clamp(88px,11vw,176px) 0;overflow:hidden">
   <div class="bb-reveal" style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,96px);display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px">
     <div data-part style="--i:0;display:flex;align-items:center;gap:16px"><span aria-hidden="true" style="display:block;width:40px;height:1px;background:#C9A54E"></span><span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Reviews</span><span aria-hidden="true" style="display:block;width:40px;height:1px;background:#C9A54E"></span></div>
-    <div style="font-family:'Libre Franklin',sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Sample text for this mockup. Real Google reviews go here.</div>
+    <div style="font-family:'Libre Franklin',sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Sample rating and text for this mockup. Real Google reviews go here.</div>
     <div data-part style="--i:1;display:flex;align-items:baseline;justify-content:center;gap:clamp(12px,2vw,28px);flex-wrap:wrap">
       <div data-parallax="0.22" style="transform:translate3d(0,var(--py,0px),0);will-change:transform"><span data-count="4.5" data-kinetic style="display:inline-block;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(120px,16vw,240px);line-height:0.85;color:#C9A54E;font-variant-numeric:tabular-nums">4.5</span></div>
       <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(22px,2.2vw,32px);line-height:1.05;color:#E9E3D3;text-transform:uppercase;text-align:left">from your reviews<br>on Google</span>
@@ -621,7 +622,7 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
 </main>
 
 <footer data-bb="end" data-screen-label="The cup" style="position:relative;z-index:1;height:240vh">
-  <div style="position:sticky;top:0;height:100vh;overflow:hidden">
+  <div style="position:sticky;top:0;height:100svh;overflow:hidden">
     <div data-bb="end-still" aria-hidden="true" style="display:none;position:absolute;inset:0;background:#0B0908 url('assets/film-end.jpg') center / cover no-repeat"></div>
     <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(11,9,8,.5) 0%,rgba(11,9,8,0) 22%,rgba(11,9,8,0) 70%,rgba(11,9,8,.72) 100%)"></div>
     <div class="bb-band bb-e-rise" data-band="0,1" data-ramp="0.55" style="position:absolute;left:50%;top:clamp(84px,12vh,140px);transform:translateX(-50%);width:min(92vw,960px);isolation:isolate;--sa:.55;--sb:.35;text-align:center">
@@ -676,7 +677,7 @@ class Component extends DCLogic {
       videoSrc: this.props.videoSrc ?? 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5545328,
       start: this.props.filmStart ?? 0, zoom: this.props.filmZoom ?? 1.08, zones: [0.576, 0.704], introEnd: this.props.introEnd ?? 0.343,
       portraitVideoSrc: this.props.portraitVideoSrc ?? 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg', portraitVideoBytes: 4104064,
-      portraitStart: this.props.portraitStart ?? 0, portraitZoom: this.props.portraitZoom ?? 1, portraitZones: [0.29, 0.751], portraitIntroEnd: this.props.portraitIntroEnd ?? 0.16,
+      portraitStart: this.props.portraitStart ?? 0, portraitZoom: this.props.portraitZoom ?? 1, portraitZones: [0.42, 0.751], portraitIntroEnd: this.props.portraitIntroEnd ?? 0.16,
       intro: this.props.intro ?? true, introEase: this.props.introEase ?? 0.35,
       heroVh: this.props.heroLength ?? 360, sharpen: this.props.sharpen ?? 0.7, dim: this.props.dim ?? 0.72
     });
