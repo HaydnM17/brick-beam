@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B0908">
+<meta name="description" content="Brick &amp; Beam Coffee Co. A coffee shop in a red brick heritage building at 4979 King St, Beamsville, Ontario. Open 7:00am to 5:00pm every day.">
+<title>Brick &amp; Beam Coffee Co · Beamsville, Ontario</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%230B0908'/%3E%3Ctext x='32' y='47' font-family='Georgia,serif' font-size='44' font-weight='700' text-anchor='middle' fill='%23C9A54E'%3E%26amp;%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&amp;family=Libre+Franklin:wght@400;500&amp;family=Mr+Dafoe&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="./film-engine.js"></script>
+<style>
+html{scroll-behavior:smooth;overflow-x:hidden;overflow-x:clip}
+body{margin:0;background:#0B0908;color:#E9E3D3;font-family:'Libre Franklin',system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;overflow-x:clip}
+::selection{background:#C9A54E;color:#15110E}
+::placeholder{color:#7A7064;opacity:1}
+a{color:#E9E3D3}a:hover{color:#C9A54E}
+input,textarea,button{font:inherit}
+:focus-visible{outline:2px solid #C9A54E;outline-offset:3px}
+.bb-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.bb-skip{position:absolute;left:16px;top:-72px;z-index:100;padding:12px 18px;border-radius:999px;background:#C9A54E;color:#15110E;font:500 12px/1 'Libre Franklin',sans-serif;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
+.bb-skip:focus{top:16px}
+@keyframes bbPulse{0%,100%{opacity:.4}50%{opacity:.95}}
+@keyframes bbSpin{to{transform:rotate(360deg)}}
+@keyframes bbCoin{from{transform:rotateX(10deg) rotateY(0deg)}to{transform:rotateX(10deg) rotateY(360deg)}}
+@keyframes bbBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+@keyframes bbMarquee{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+@keyframes bbFadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes bbPageIn{from{opacity:0}to{opacity:1}}
+@keyframes bbFloat{0%,100%{transform:translate3d(0,0,0) rotate(-2deg)}50%{transform:translate3d(0,-12px,0) rotate(2deg)}}
+@keyframes bbSteam{0%{transform:translate3d(0,0,0) scale(.7);opacity:0}30%{opacity:.5}100%{transform:translate3d(var(--sx,0px),-170px,0) scale(1.5);opacity:0}}
+@keyframes bbBlink{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.55);opacity:.45}}
+[data-bb="header"].bb-solid{background:rgba(11,9,8,.82)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(233,227,211,.06)}
+/* Wordmark artwork: a single cropped/full SVG masked into brand colour, used at every brand-name
+   instance. mask-size:contain keeps the whole glyph set inside the box; background-color:currentColor
+   lets one file serve brass or cream from whatever colour its ancestor already sets. */
+.bb-wm{display:inline-block;vertical-align:baseline;height:.832em;width:auto;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;background-color:currentColor}
+.bb-band{text-shadow:0 1px 2px rgba(6,4,3,.95),0 3px 12px rgba(6,4,3,.78),0 10px 44px rgba(6,4,3,.8)}
+.bb-band .bb-btn{text-shadow:none}
+.bb-band::before{content:"";position:absolute;inset:-24% -28%;z-index:-1;pointer-events:none;opacity:calc(.25 + .75*var(--k,1));background:radial-gradient(ellipse 74% 62% at 50% 50%,rgba(8,6,5,var(--sa,.66)) 0%,rgba(8,6,5,var(--sb,.44)) 46%,rgba(8,6,5,0) 76%)}
+.bb-w{display:inline-block;white-space:nowrap}
+.bb-c{display:inline-block}
+.bb-e-scatter .bb-c{--kc:clamp(0,(var(--k,0) - var(--th,0))*2.6,1);opacity:var(--kc);transform:translate(calc((1 - var(--kc))*var(--jx,0px)),calc((1 - var(--kc))*var(--jy,0px))) rotate(calc((1 - var(--kc))*var(--jr,0deg)))}
+.bb-e-drift .bb-w{--kc:clamp(0,(var(--k,0) - var(--th,0))*2.8,1);opacity:var(--kc);transform:translateY(calc((1 - var(--kc))*-30px))}
+.bb-e-depth .bb-w{--kc:clamp(0,(var(--k,0) - var(--th,0))*3,1);opacity:var(--kc);transform:scale(calc(.84 + .16*var(--kc)))}
+.bb-e-rise .bb-w{--kc:clamp(0,(var(--k,0) - var(--th,0))*2.8,1);opacity:var(--kc);transform:translateY(calc((1 - var(--kc))*26px))}
+.bb-band [data-stage="pre"]{--ks:clamp(0,var(--k,0)*2.2,1);opacity:var(--ks);transform:translateY(calc((1 - var(--ks))*-10px))}
+.bb-band [data-stage="sub"]{--ks:clamp(0,(var(--k,0) - .62)*4,1);opacity:var(--ks);transform:translateY(calc((1 - var(--ks))*14px))}
+.bb-band [data-stage="cta"]{--kb:clamp(0,(var(--k,0) - .76)*5,1);opacity:var(--kb);transform:translateY(calc((1 - var(--kb))*14px))}
+.bb-js .bb-glide{transform:translate3d(0,calc((.5 - var(--pb,.5))*90px),0)}
+.bb-js [data-kinetic]{transform:skewY(calc(var(--vel,0)*-2.4deg));will-change:transform}
+[data-bb="film"].bb-video-ready [data-bb="canvas"]{opacity:1!important}
+[data-bb="film"].bb-video-ready.bb-no-gl [data-bb="video"]{opacity:1!important}
+[data-bb="film"].bb-video-ready.bb-no-gl [data-bb="canvas"]{opacity:0!important}
+[data-bb="cue"].bb-hidden{opacity:0}
+.bb-cue-done [data-bb="ring"]{display:none!important}
+.bb-cue-done [data-bb="chevron"]{display:block!important}
+[data-bb="static-hero"],[data-bb="end-still"]{display:none}
+.bb-film-failed [data-bb="end-still"]{display:block!important}
+/* Static-hero gates. Keep this list byte-identical to GATES in film-engine.js. */
+@media (prefers-reduced-motion: reduce), (orientation: landscape) and (pointer: coarse) and (max-height: 560px){
+  [data-bb="film"],[data-bb="hero"]{display:none!important}
+  [data-bb="static-hero"]{display:flex!important}
+  [data-bb="end-still"]{display:block!important}
+}
+/* Fallback framing, landscape film on a portrait screen only. That is a portrait window wider than the
+   swap query below, where the wide frame cannot cover: it is fitted to the full width, top-anchored, with
+   ink under it. The portrait film covers on its own and gets none of this, so the class gate is the whole
+   rule, not a nicety. The engine writes .bb-film-portrait / .bb-film-landscape on the root. */
+@media (orientation: portrait){
+  .bb-film-landscape [data-bb="poster"]{top:0!important;bottom:0!important;background-size:100% auto!important;background-position:center top!important;transform:none!important}
+  .bb-film-landscape [data-bb="video"]{object-fit:contain!important;object-position:center top!important;background:#0B0908}
+  .bb-film-landscape [data-bb="band-fade"]{display:block!important}
+  .bb-film-portrait [data-bb="band-fade"]{display:none!important}
+}
+/* Wider portrait windows keep the landscape stills, fitted to the width the same way the film is. */
+@media (orientation: portrait) and (min-width: 1025px){
+  [data-bb="static-hero"],[data-bb="end-still"]{background-size:100% auto!important;background-position:center top!important}
+}
+/* The two films. Keep this query byte-identical to PORTRAIT_Q in film-engine.js: the static hero and the
+   end frame must show stills from whichever film the engine would load here. */
+@media (orientation: portrait) and (max-width: 1024px){
+  [data-bb="static-hero"]{background-image:url('assets/film-poster-portrait.jpg')!important;background-size:cover!important;background-position:center!important}
+  [data-bb="end-still"]{background-image:url('assets/film-end-portrait.jpg')!important;background-size:cover!important;background-position:center!important}
+}
+/* Narrow viewports: the film owns the top of the screen, the words live in the dark beneath it. */
+@media (orientation: portrait), (max-width: 720px){
+  [data-bb="hero"] .bb-band{left:20px!important;right:20px!important;width:auto!important;top:auto!important;bottom:44px!important;transform:none!important}
+  [data-bb="hero"] .bb-band h1,[data-bb="hero"] .bb-band h2{font-size:clamp(40px,11vw,72px)!important}
+  [data-bb="hero"] .bb-band p{font-size:16px!important;max-width:36ch}
+  [data-bb="hero"] .bb-band::before{inset:-16% -14%}
+  .bb-band .bb-glide{transform:translate3d(0,calc((.5 - var(--pb,.5))*28px),0)}
+  [data-bb="end"] .bb-band{left:20px!important;right:20px!important;width:auto!important;transform:none!important}
+  [data-bb="endmark"]{font-size:clamp(52px,13vw,164px)!important}
+}
+/* Only the landscape film puts a hard edge across the screen, so only it pushes the cue and the endmark
+   clear of one. Under the portrait film both go back to where they sit on desktop. */
+@media (orientation: portrait){
+  .bb-film-landscape [data-bb="cue"]{top:calc(56.25vw + 14px)!important;bottom:auto!important}
+  .bb-film-landscape [data-bb="end"] .bb-band{top:calc(56.25vw + 22px)!important}
+}
+/* The portrait film is full-bleed, so the hero copy sits over it the way it does on desktop: centred in
+   the lower half of the frame, clear of the nozzle near the top and clear of the scroll cue at the bottom.
+   Centred (not bottom-anchored) at roughly 60% down the viewport; the safe-area term nudges that centre up
+   a touch on notched phones so a tall band's lower edge still clears the home indicator.
+   Keep this query byte-identical to PORTRAIT_Q in film-engine.js. */
+@media (orientation: portrait) and (max-width: 1024px){
+  .bb-film-portrait [data-bb="hero"] .bb-band{top:calc(50% - env(safe-area-inset-bottom)*0.5)!important;bottom:auto!important;transform:translateY(-50%)!important}
+}
+@media (max-height:560px){[data-bb="cue"]{display:none!important}}
+@media (max-width:900px){[data-bb="hold-col"]{position:static!important}}
+@media (pointer:coarse){.bb-btn{min-height:48px}}
+/* ---------- Phones and small screens ---------- */
+a,button{-webkit-tap-highlight-color:transparent}
+/* Phone header: the wordmark keeps its own row, the four section links sit on a scrolling rail under it.
+   760px is where the one-row header stops fitting: wordmark 221px + nav 402px + gap needs 639px of the 90% content width. */
+@media (max-width:760px){
+  [data-bb="header"]{flex-wrap:wrap!important;gap:0!important;padding:0 max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left))!important}
+  [data-bb="header"]>a{flex:1 0 100%;min-height:48px;align-items:center!important;white-space:nowrap}
+  /* The wordmark has its own full-width row here, so the Coffee Co tag beside it fits and stays. */
+  [data-bb="header"] nav{flex:1 0 100%;min-height:48px;gap:0!important;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(90deg,#000 88%,rgba(0,0,0,0) 100%)}
+  [data-bb="header"] nav::-webkit-scrollbar{display:none}
+  [data-bb="header"] nav>a{flex:none;display:inline-flex;align-items:center;min-height:48px;padding-right:22px;font-size:11px!important;letter-spacing:0.14em!important;white-space:nowrap;text-shadow:0 1px 2px rgba(6,4,3,.95),0 3px 12px rgba(6,4,3,.78)}
+  [data-bb="header"] nav>a:last-child{padding-right:8px}
+  #main,#shop,#pour,#room,#club,#reviews,#find{scroll-margin-top:104px}
+}
+/* A fixed 100vh stage fights the iOS toolbar; svh keeps the bottom of a band on screen. */
+@media (max-width:900px){
+  [data-bb="stage"]{height:100svh!important}
+  [data-bb="end"]>div{height:100svh!important}
+}
+/* Sections at narrow widths: single column, badges centred, cards sized to the screen. */
+@media (max-width:700px){
+  #shop .bb-reveal{justify-content:center!important}
+  [data-bb="map"]{min-height:clamp(240px,45vh,400px)!important}
+  #find form{gap:16px!important}
+  #find form button[type="submit"]{width:100%}
+  #reviews blockquote{width:min(86vw,600px)!important;gap:14px!important;padding-right:clamp(24px,7vw,112px)!important}
+  #reviews blockquote>span{font-size:34px!important}
+  #reviews [data-bb="mq"]{-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 4%,#000 96%,rgba(0,0,0,0))!important;mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 4%,#000 96%,rgba(0,0,0,0))!important}
+}
+@media (max-width:420px){
+  [data-bb="static-hero"] h1{font-size:clamp(44px,14.5vw,104px)!important}
+  [data-bb="static-hero"] [data-script]{font-size:clamp(28px,8.6vw,44px)!important}
+}
+/* Short landscape: the static hero has to compose inside 390px of height. Inert unless a gate above shows it. */
+@media (orientation:landscape) and (max-height:560px){
+  [data-bb="static-hero"]{padding-top:64px!important}
+  [data-bb="static-hero"]>div:last-child{gap:8px!important}
+  [data-bb="static-hero"] [data-script]{font-size:clamp(24px,8vh,44px)!important}
+  [data-bb="static-hero"] h1{font-size:clamp(40px,13vh,104px)!important}
+  [data-bb="static-hero"] p{font-size:15px!important;max-width:46ch!important}
+  [data-bb="static-hero"] [data-chips]>span{font-size:10px!important}
+}
+/* min-height plus padding on a content-box: without this the static hero is one viewport plus 164px. */
+[data-bb="static-hero"]{box-sizing:border-box}
+/* Touch: 48px targets and safe-area insets, on coarse pointers only so the desktop layout is untouched. */
+@media (pointer:coarse){
+  .bb-skip{min-height:48px;box-sizing:border-box;display:inline-flex;align-items:center}
+  #find a[href^="https://www.instagram"],#find a[href^="mailto"],#find button[type="button"],#reviews a[target],[data-bb="end"] a{min-height:48px;display:inline-flex;align-items:center}
+  [data-bb="static-hero"]{padding-bottom:max(44px,calc(env(safe-area-inset-bottom) + 16px))!important}
+  [data-bb="end"]>div>div:last-child{bottom:max(26px,calc(env(safe-area-inset-bottom) + 10px))!important}
+}
+/* Tablets keep the one-row header, so the hit areas grow with padding and pull back with margin. */
+@media (pointer:coarse) and (min-width:761px){
+  [data-bb="header"]>a{padding:9px 0;margin:-9px 0}
+  [data-bb="header"] nav>a{display:inline-flex;align-items:center;padding:16.5px 0;margin:-16.5px 0}
+}
+@media (pointer:coarse) and (orientation:portrait){
+  [data-bb="hero"] .bb-band{bottom:max(44px,calc(env(safe-area-inset-bottom) + 16px))!important}
+}
+@media (pointer:coarse) and (max-width:720px){
+  [data-bb="hero"] .bb-band{bottom:max(44px,calc(env(safe-area-inset-bottom) + 16px))!important}
+}
+/* Phone GPUs: the full-screen grain blend and the pill backdrop blurs cost more than they add. */
+@media (pointer:coarse) and (max-width:900px){
+  [data-bb="grain"]{display:none!important}
+  [data-stage="pre"]>span,[data-chips]>span{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  [data-bb="header"].bb-solid{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+}
+.bb-js .bb-reveal [data-part]{opacity:0;transform:translate3d(0,26px,0);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1);transition-delay:calc(var(--i,0)*90ms)}
+.bb-js .bb-reveal.in [data-part]{opacity:1;transform:none}
+.bb-js .bb-reveal.in.settled [data-part]{transition-delay:0s}
+.bb-js .bb-reveal [data-rule]{transform:scaleX(0);transition:transform 1.2s cubic-bezier(.65,0,.35,1) .15s}
+.bb-js .bb-reveal.in [data-rule]{transform:scaleX(1)}
+.bb-mask{display:inline-block;overflow:hidden;vertical-align:top;padding:.04em .03em .16em;margin:-.04em -.03em -.16em}
+.bb-js .bb-mask>span{display:inline-block;transform:translate3d(0,112%,0);transition:transform 1.1s cubic-bezier(.22,1,.36,1);transition-delay:calc(var(--i,0)*60ms)}
+.bb-js .bb-reveal.in .bb-mask>span{transform:none}
+.bb-js .bb-reveal.in.settled .bb-mask>span{transition-delay:0s}
+.bb-hold{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.bb-hold [data-fill]{clip-path:inset(calc((1 - var(--h,0))*100%) -8% -8% -8%)}
+.bb-hold.bb-holding [data-glow]{transform:translate(-50%,-50%) scale(1.3)}
+/* The script line arrives with the badge, before the ampersand starts filling. */
+[data-when="after"]{display:block;opacity:0;transform:translateY(8px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
+.bb-reveal.in [data-when="after"]{opacity:1;transform:none}
+.bb-done [data-when="before"]{display:none!important}
+[data-bb="steam"]{opacity:0;transition:opacity 1s ease}
+.bb-done [data-bb="steam"]{opacity:1}
+.bb-js [data-bb="pour"] [data-lit]{opacity:.55;transition:opacity .55s cubic-bezier(.22,1,.36,1);transition-delay:calc(var(--i,0)*35ms)}
+.bb-js [data-bb="pour"].bb-done [data-lit]{opacity:1}
+.bb-js [data-bb="pour"] [data-rule2]{transform:scaleX(0);transform-origin:left;transition:transform .7s cubic-bezier(.65,0,.35,1);transition-delay:calc(var(--i,0)*120ms)}
+.bb-js [data-bb="pour"].bb-done [data-rule2]{transform:scaleX(1)}
+body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play-state:paused!important}
+.bb-off,.bb-off *,.bb-off::before,.bb-off::after{animation-play-state:paused!important}
+.bb-pinned *,.bb-pinned *::before,.bb-pinned *::after{animation:none!important}
+.bb-pinned .bb-reveal [data-part],.bb-pinned .bb-mask>span,.bb-pinned .bb-reveal [data-rule],.bb-pinned [data-when="after"]{opacity:1!important;transform:none!important;transition:none!important}
+.bb-pinned [data-bb="pour"] [data-lit]{opacity:1!important}
+.bb-pinned [data-bb="pour"] [data-rule2]{transform:scaleX(1)!important}
+.bb-pinned [data-parallax],.bb-pinned .bb-glide,.bb-pinned [data-kinetic],.bb-pinned [data-spin],.bb-pinned [data-bb="mq"]>div{transform:none!important}
+.bb-pinned [data-bb="steam"]{opacity:0!important}
+.bb-pinned [data-bb="track"]{animation:none!important;flex-wrap:wrap;width:auto!important;justify-content:center}
+.bb-pinned [data-bb="track"] [data-dup]{display:none}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important;transition-delay:0s!important}
+  .bb-reveal [data-part],.bb-mask>span,.bb-reveal [data-rule],[data-when="after"]{opacity:1!important;transform:none!important}
+  [data-bb="pour"] [data-lit]{opacity:1!important}
+  [data-bb="pour"] [data-rule2]{transform:scaleX(1)!important}
+  [data-parallax],.bb-glide,[data-kinetic],[data-spin],[data-bb="mq"]>div{transform:none!important}
+  [data-bb="steam"]{opacity:0!important}
+  [data-bb="track"]{flex-wrap:wrap;width:auto!important;justify-content:center}
+  [data-bb="track"] [data-dup]{display:none}
+}
+.leaflet-container{background:#211B17!important}
+.leaflet-control-attribution{background:rgba(21,17,14,.85)!important;color:#B5AB9C!important;font:11px/1.5 'Libre Franklin',sans-serif!important}
+.leaflet-control-attribution a{color:#C9A54E!important}
+.leaflet-tooltip{background:#15110E;color:#E9E3D3;border:1px solid #3A322D;font:500 12px/1 'Libre Franklin',sans-serif;letter-spacing:.08em;text-transform:uppercase;box-shadow:none}
+.leaflet-tooltip-top:before{border-top-color:#3A322D}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" id="top" style="position:relative;color:#E9E3D3;overflow-x:clip">
+<a class="bb-skip" href="#main">Skip to content</a>
+
+<div data-bb="film" aria-hidden="true" style="position:fixed;inset:0;z-index:0;overflow:hidden;background:#0B0908;pointer-events:none">
+  <div data-bb="poster" style="position:absolute;left:0;right:0;top:-5%;bottom:-5%;background-color:#0B0908;background-position:center;background-size:cover;background-repeat:no-repeat;transform:translate3d(0,calc(var(--pp,0)*-4%),0);will-change:transform"></div>
+  <video data-bb="video" tabindex="-1" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s cubic-bezier(.22,1,.36,1);transform:translateZ(0)"></video>
+  <canvas data-bb="canvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .9s cubic-bezier(.22,1,.36,1);transform:translateZ(0)"></canvas>
+  <div data-bb="band-fade" style="display:none;position:absolute;left:0;right:0;top:0;height:calc(56.25vw + 2px);background:linear-gradient(180deg,rgba(11,9,8,0) 80%,rgba(11,9,8,.7) 93%,#0B0908 99%,#0B0908 100%)"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 120% 90% at 50% 45%,rgba(8,6,5,0) 35%,rgba(8,6,5,.62) 100%)"></div>
+  <div data-bb="dim" style="position:absolute;inset:0;background:#0B0908;opacity:0;will-change:opacity"></div>
+</div>
+<sc-if value="{{ grainOn }}" hint-placeholder-val="{{ true }}">
+<div data-bb="grain" aria-hidden="true" style="position:fixed;inset:0;z-index:60;pointer-events:none;opacity:0.075;mix-blend-mode:overlay;background-image:url(&quot;data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>&quot;);background-size:240px 240px"></div>
+</sc-if>
+
+<header data-bb="header" style="position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(20px,5vw,96px);background:linear-gradient(180deg,rgba(11,9,8,.72) 0%,rgba(11,9,8,0) 100%);transition:background .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1);animation:bbFadeDown 1s cubic-bezier(.22,1,.36,1) both .3s">
+  <a href="#top" aria-label="Brick &amp; Beam Coffee Co, back to top" style="text-decoration:none;display:flex;align-items:baseline;color:#C9A54E">
+    <span aria-hidden="true" class="bb-wm" style="font-size:24px;aspect-ratio:1683/128;-webkit-mask-image:url(assets/wordmark-full.svg);mask-image:url(assets/wordmark-full.svg)"></span>
+  </a>
+  <nav aria-label="Primary" style="display:flex;align-items:center;gap:clamp(14px,2.2vw,28px)">
+    <a data-bb="nav-extra" href="#pour" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">What we pour</a>
+    <a data-bb="nav-extra" href="#room" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">The room</a>
+    <a href="#find" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">Find us</a>
+    <a href="https://www.instagram.com/brickandbeamcoffee" target="_blank" rel="noreferrer" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">Instagram</a>
+  </nav>
+  <span aria-hidden="true" style="position:absolute;left:0;bottom:0;height:2px;width:100%;background:#C9A54E;transform-origin:left;transform:scaleX(var(--pp,0));will-change:transform"></span>
+</header>
+
+<main id="main" tabindex="-1" style="outline:none;position:relative;z-index:1;animation:bbPageIn .9s ease-out both">
+
+<section data-bb="hero" data-screen-label="Hero (the pour)" style="position:relative;height:360vh">
+  <div data-bb="stage" style="position:sticky;top:0;height:100vh;overflow:hidden">
+
+    <div class="bb-band bb-e-rise" data-band="0,0.42" data-fade="0.05" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,700px);isolation:isolate;opacity:1;--sa:.72;--sb:.48;text-align:center">
+      <div class="bb-glide" style="display:flex;flex-direction:column;align-items:center;gap:10px;will-change:transform">
+        <div data-stage="pre" style="font-family:'Mr Dafoe',cursive;font-size:clamp(26px,3vw,40px);line-height:1;color:#C9A54E;margin-bottom:-6px">Proudly Brewed</div>
+        <div aria-label="Brick &amp; Beam" style="display:flex;justify-content:center;align-items:baseline;gap:0.16em;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(52px,8vw,120px);line-height:0.9;letter-spacing:0.01em;text-transform:uppercase;color:#E9E3D3">
+          <span class="bb-w" style="--th:0"><span aria-hidden="true" class="bb-wm" style="aspect-ratio:1023/128;-webkit-mask-image:url(assets/wordmark-brickbeam.svg);mask-image:url(assets/wordmark-brickbeam.svg)"></span></span>
+        </div>
+        <div data-stage="sub" style="display:flex;align-items:center;gap:14px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:clamp(11px,1vw,14px);letter-spacing:0.22em;text-transform:uppercase;color:#E9E3D3;white-space:nowrap">
+          <span>EST.</span><span style="color:#C9A54E">·</span><span>Coffee <span style="display:inline-block;font-size:.7em;line-height:1;vertical-align:.3279em;border-bottom:.1em solid currentColor;padding-bottom:.1113em">Co</span></span><span style="color:#C9A54E">·</span><span>2026</span>
+        </div>
+        <div data-stage="sub" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:#B5AB9C">Beamsville, Ontario</div>
+      </div>
+    </div>
+
+    <div class="bb-band bb-e-drift" data-band="0.33,0.72" data-fade="0.05" style="position:absolute;right:clamp(24px,6vw,110px);top:50%;transform:translateY(-50%);width:min(44vw,620px);isolation:isolate;opacity:0;visibility:hidden;--sa:.66;--sb:.44">
+      <div class="bb-glide" style="display:flex;flex-direction:column;align-items:flex-start;gap:22px;will-change:transform">
+        <div data-stage="pre" style="display:flex;flex-wrap:wrap;gap:10px">
+          <span style="display:inline-flex;align-items:center;gap:9px;padding:8px 14px;border-radius:999px;background:rgba(12,9,8,.55);border:1px solid rgba(233,227,211,.14);backdrop-filter:blur(10px);font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3"><sc-if value="{{ isOpen }}"><span data-living aria-hidden="true" style="display:block;width:8px;height:8px;border-radius:50%;background:#4CBB6C;animation:bbBlink 2.4s ease-in-out infinite"></span></sc-if><sc-if value="{{ isClosed }}"><span data-living aria-hidden="true" style="display:block;width:8px;height:8px;border-radius:50%;background:#C24B3A;animation:bbBlink 2.4s ease-in-out infinite"></span></sc-if>{{ openLabel }}</span>
+        </div>
+        <h1 data-split="chars" style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(52px,6vw,96px);line-height:0.88;text-transform:uppercase;letter-spacing:0.002em;color:#E9E3D3;margin:0">Open at seven.<br>Every day</h1>
+        <p data-stage="sub" style="font-family:'Libre Franklin',sans-serif;font-size:clamp(17px,1.3vw,20px);line-height:1.55;color:#E9E3D3;margin:0;max-width:34ch;text-wrap:pretty">7:00am to 5:00pm. 4979 King Street, downtown Beamsville.</p>
+      </div>
+    </div>
+
+    <div class="bb-band bb-e-depth" data-band="0.63,1" data-fade="0.05" style="position:absolute;left:clamp(24px,6vw,110px);top:50%;transform:translateY(-50%);width:min(46vw,680px);isolation:isolate;opacity:0;visibility:hidden;--sa:.66;--sb:.44">
+      <div class="bb-glide" style="display:flex;flex-direction:column;align-items:flex-start;gap:22px;will-change:transform">
+        <h2 data-split="words" data-spread="0.55" style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(52px,6vw,96px);line-height:0.88;text-transform:uppercase;letter-spacing:0.002em;color:#E9E3D3;margin:0">The corner of King<br>and everything</h2>
+        <p data-stage="sub" style="font-family:'Libre Franklin',sans-serif;font-size:clamp(17px,1.3vw,20px);line-height:1.55;color:#E9E3D3;margin:0;max-width:34ch;text-wrap:pretty">Across from the Home Hardware, you cannot miss it.</p>
+        <a data-stage="cta" class="bb-btn" href="#find" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 28px;border-radius:999px;background:#C9A54E;border:1px solid #C9A54E;color:#15110E;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:background .35s cubic-bezier(.22,1,.36,1),border-color .35s cubic-bezier(.22,1,.36,1)" style-hover="background:#E9E3D3;border-color:#E9E3D3">Find us on King</a>
+      </div>
+    </div>
+
+    <div data-bb="cue" aria-hidden="true" style="position:absolute;left:50%;bottom:28px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;color:#E9E3D3;transition:opacity .6s cubic-bezier(.22,1,.36,1)">
+      <svg data-bb="ring" width="48" height="48" style="display:block"><circle cx="24" cy="24" r="20" style="fill:none;stroke:rgba(233,227,211,.16);stroke-width:2"></circle><circle cx="24" cy="24" r="20" style="fill:none;stroke:#C9A54E;stroke-width:2;stroke-dasharray:126;stroke-dashoffset:var(--ld,126);stroke-linecap:round;transform:rotate(-90deg);transform-origin:24px 24px;transition:stroke-dashoffset .3s linear"></circle></svg>
+      <svg data-bb="chevron" width="22" height="22" style="display:none;animation:bbBob 2.6s ease-in-out infinite"><path d="M3 8l8 8 8-8" style="fill:none;stroke:#C9A54E;stroke-width:1.5"></path></svg>
+      <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#B5AB9C">Scroll to pour</span>
+    </div>
+  </div>
+</section>
+
+<section data-bb="static-hero" data-screen-label="Hero (static)" style="display:none;position:relative;min-height:100svh;flex-direction:column;justify-content:flex-end;padding:120px clamp(20px,5vw,96px) 44px;background:#0B0908 url('assets/film-poster.jpg') center top / cover no-repeat;overflow:hidden">
+  <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(11,9,8,.55) 0%,rgba(11,9,8,.1) 35%,rgba(11,9,8,.82) 72%,#0B0908 100%)"></div>
+  <div style="position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:16px;max-width:640px;text-shadow:0 1px 2px rgba(6,4,3,.95),0 3px 12px rgba(6,4,3,.78)">
+    <div data-chips style="display:flex;flex-wrap:wrap;gap:8px">
+      <span style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;background:rgba(12,9,8,.55);border:1px solid rgba(233,227,211,.14);backdrop-filter:blur(10px);font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3">EST. 2026 · Beamsville, Ontario</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(12,9,8,.55);border:1px solid rgba(233,227,211,.14);backdrop-filter:blur(10px);font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3"><sc-if value="{{ isOpen }}"><span aria-hidden="true" style="display:block;width:7px;height:7px;border-radius:50%;background:#4CBB6C;animation:bbBlink 2.4s ease-in-out infinite"></span></sc-if><sc-if value="{{ isClosed }}"><span aria-hidden="true" style="display:block;width:7px;height:7px;border-radius:50%;background:#C24B3A;animation:bbBlink 2.4s ease-in-out infinite"></span></sc-if>{{ openLabel }}</span>
+    </div>
+    <div data-script style="font-family:'Mr Dafoe',cursive;font-size:clamp(30px,8vw,44px);line-height:1;color:#C9A54E;margin-bottom:-6px">Proudly Brewed</div>
+    <h1 style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(56px,15vw,104px);line-height:0.88;text-transform:uppercase;color:#E9E3D3;margin:0">Open at seven.<br>Every day</h1>
+    <p style="font-family:'Libre Franklin',sans-serif;font-size:17px;line-height:1.55;color:#E9E3D3;margin:0;max-width:34ch;text-wrap:pretty">4979 King Street, Beamsville, across from the Home Hardware.</p>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;margin-top:8px">
+      <a class="bb-btn" href="#find" style="display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:999px;background:#C9A54E;border:1px solid #C9A54E;color:#15110E;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;text-shadow:none">Find us on King</a>
+      <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:24px;line-height:1;color:#E9E3D3">7:00am to 5:00pm</span>
+    </div>
+  </div>
+</section>
+
+<section id="shop" data-screen-label="The shop" style="position:relative;padding:clamp(96px,12vw,180px) clamp(20px,5vw,96px) clamp(72px,9vw,140px)">
+  <div style="max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(40px,5vw,72px)">
+    <div class="bb-reveal" style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;align-items:center;gap:16px"><span data-rule aria-hidden="true" style="display:block;width:56px;height:1px;background:#C9A54E;transform-origin:left"></span><span data-part style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">The shop</span></div>
+      <h2 data-split="mask" data-kinetic style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(50px,7.2vw,116px);line-height:0.9;text-transform:uppercase;letter-spacing:0.004em;color:#E9E3D3;margin:0;max-width:14ch;text-wrap:balance">Named for the building. Built for the town</h2>
+    </div>
+    <div class="bb-reveal" style="display:flex;flex-wrap:wrap;gap:clamp(32px,5vw,88px);align-items:center;justify-content:space-between">
+      <div style="flex:3 1 min(100%,320px);display:flex;flex-direction:column;gap:22px;max-width:640px">
+        <p data-part style="--i:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.4vw,22px);line-height:1.55;color:#E9E3D3;margin:0;max-width:52ch;text-wrap:pretty">Brick &amp; Beam is a coffee shop on the corner of King Street in downtown Beamsville, in a red brick heritage building with the brick left exposed inside. We opened in May 2026.</p>
+        <p data-part style="--i:1;font-family:'Libre Franklin',sans-serif;font-size:clamp(16px,1.15vw,18px);line-height:1.6;color:#B5AB9C;margin:0;max-width:56ch;text-wrap:pretty">The name describes the room you are standing in. The town is in it too. Look for the gold lettering across from the Home Hardware.</p>
+        <div data-part style="--i:2;display:flex;flex-wrap:wrap;gap:12px 32px;padding-top:22px;border-top:1px solid #3A322D">
+          <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3">Opened March 2026</span>
+          <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3">Brick, inside and out</span>
+          <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3">4979 King Street</span>
+        </div>
+      </div>
+      <div data-part style="--i:1;flex:0 0 auto;display:flex;justify-content:center;padding:clamp(8px,2vw,24px)">
+        <div data-spin data-living style="width:clamp(160px,18vw,240px);height:clamp(160px,18vw,240px);border-radius:50%;box-shadow:0 24px 60px rgba(0,0,0,.55);perspective:900px">
+          <div style="position:relative;width:100%;height:100%;border-radius:50%;transform-style:preserve-3d;animation:bbCoin 10s linear infinite;will-change:transform">
+            <img src="assets/logo.png" alt="Brick &amp; Beam badge, an ampersand ringed by the name and the year 2026" style="position:absolute;inset:0;display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 2px rgba(233,227,211,.22)">
+            <img src="assets/logo-secondary.png" alt="" aria-hidden="true" style="position:absolute;inset:0;display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:inset 0 0 0 2px rgba(233,227,211,.22)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-bb="mq" data-rate="0.35" data-living aria-hidden="true" style="position:relative;overflow:hidden;border-top:1px solid #2E2723;border-bottom:1px solid #2E2723;padding:26px 0;background:rgba(11,9,8,.35)">
+  <div style="transform:translate3d(var(--mx,0px),0,0);will-change:transform">
+    <div data-bb="track" style="display:flex;width:max-content;animation:bbMarquee 64s linear infinite;animation-delay:-21.3s;will-change:transform">
+      <div style="display:flex;align-items:baseline;gap:clamp(28px,3vw,48px);padding-right:clamp(28px,3vw,48px);white-space:nowrap">
+        <span style="font-family:'Mr Dafoe',cursive;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">Proudly Brewed</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(44px,5vw,80px);line-height:1;color:#E9E3D3"><span aria-hidden="true" class="bb-wm" style="aspect-ratio:1023/128;-webkit-mask-image:url(assets/wordmark-brickbeam.svg);mask-image:url(assets/wordmark-brickbeam.svg)"></span></span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#B5AB9C">EST. 2026</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#E9E3D3">BEAMSVILLE, ONTARIO</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Mr Dafoe',cursive;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">Proudly Brewed</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(44px,5vw,80px);line-height:1;color:#E9E3D3"><span aria-hidden="true" class="bb-wm" style="aspect-ratio:1023/128;-webkit-mask-image:url(assets/wordmark-brickbeam.svg);mask-image:url(assets/wordmark-brickbeam.svg)"></span></span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#B5AB9C">EST. 2026</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#E9E3D3">BEAMSVILLE, ONTARIO</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+      </div>
+      <div data-dup style="display:flex;align-items:baseline;gap:clamp(28px,3vw,48px);padding-right:clamp(28px,3vw,48px);white-space:nowrap">
+        <span style="font-family:'Mr Dafoe',cursive;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">Proudly Brewed</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(44px,5vw,80px);line-height:1;color:#E9E3D3"><span aria-hidden="true" class="bb-wm" style="aspect-ratio:1023/128;-webkit-mask-image:url(assets/wordmark-brickbeam.svg);mask-image:url(assets/wordmark-brickbeam.svg)"></span></span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#B5AB9C">EST. 2026</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#E9E3D3">BEAMSVILLE, ONTARIO</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Mr Dafoe',cursive;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">Proudly Brewed</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(44px,5vw,80px);line-height:1;color:#E9E3D3"><span aria-hidden="true" class="bb-wm" style="aspect-ratio:1023/128;-webkit-mask-image:url(assets/wordmark-brickbeam.svg);mask-image:url(assets/wordmark-brickbeam.svg)"></span></span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#B5AB9C">EST. 2026</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+        <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(44px,5vw,80px);line-height:1;letter-spacing:.04em;color:#E9E3D3">BEAMSVILLE, ONTARIO</span><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:1;color:#C9A54E">&amp;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="pour" data-bb="pour" data-screen-label="What we pour" style="position:relative;padding:clamp(88px,11vw,176px) clamp(20px,5vw,96px);background:rgba(11,9,8,.5)">
+  <div style="max-width:1320px;margin:0 auto;display:flex;flex-wrap:wrap;gap:clamp(32px,4vw,72px);align-items:flex-start">
+    <div class="bb-reveal" data-bb="hold-col" style="flex:4 1 min(100%,300px);position:sticky;top:96px;display:flex;flex-direction:column;align-items:center">
+      <div data-bb="hold" data-part class="bb-hold" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;background:none;border:0;padding:12px 0;margin:0;color:inherit;cursor:default;border-radius:16px">
+        <span data-glow aria-hidden="true" style="position:absolute;left:50%;top:44%;width:78%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(204,114,20,.34) 0%,rgba(204,114,20,0) 68%);pointer-events:none;animation:bbPulse 6s ease-in-out -1.2s infinite;transition:transform .6s cubic-bezier(.22,1,.36,1)"></span>
+        <span data-bb="steam" data-living aria-hidden="true" style="position:absolute;left:50%;top:10%;width:0;height:0;pointer-events:none">
+          <span style="position:absolute;left:-74px;bottom:0;width:46px;height:100px;border-radius:50%;background:rgba(233,227,211,.42);filter:blur(14px);--sx:-28px;animation:bbSteam 4.6s ease-out -0.4s infinite"></span>
+          <span style="position:absolute;left:-24px;bottom:0;width:46px;height:100px;border-radius:50%;background:rgba(233,227,211,.42);filter:blur(14px);--sx:20px;animation:bbSteam 5.2s ease-out -2.1s infinite"></span>
+          <span style="position:absolute;left:28px;bottom:0;width:46px;height:100px;border-radius:50%;background:rgba(233,227,211,.42);filter:blur(14px);--sx:-12px;animation:bbSteam 4.1s ease-out -3.3s infinite"></span>
+        </span>
+        <span aria-hidden="true" style="position:relative;display:block;width:clamp(150px,20vw,352px);aspect-ratio:366/452;margin:0 auto">
+          <span style="position:absolute;inset:0;-webkit-mask-image:url(assets/amp-haydn.svg);mask-image:url(assets/amp-haydn.svg);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;background:rgba(233,227,211,.14)"></span>
+          <span data-fill style="position:absolute;inset:0;-webkit-mask-image:url(assets/amp-haydn.svg);mask-image:url(assets/amp-haydn.svg);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;background:linear-gradient(180deg,#E0954A 0%,#CC7214 34%,#AC4F0D 100%)"></span>
+          <span aria-hidden="true" style="position:absolute;left:0;right:0;top:100%;margin-top:7.6%;height:9.23%;background:rgba(233,227,211,.14)"></span>
+        </span>
+        <span data-when="after" style="font-family:'Mr Dafoe',cursive;font-size:clamp(30px,3.2vw,44px);line-height:1;color:#C9A54E;text-align:center">Proudly Brewed</span>
+      </div>
+    </div>
+    <div style="flex:7 1 min(100%,340px);display:flex;flex-direction:column;gap:clamp(36px,4vw,56px)">
+      <div class="bb-reveal" style="display:flex;flex-direction:column;gap:26px">
+        <div style="display:flex;align-items:center;gap:16px"><span data-rule aria-hidden="true" style="display:block;width:56px;height:1px;background:#C9A54E;transform-origin:left"></span><span data-part style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">The board</span></div>
+        <h2 data-split="mask" data-kinetic style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(50px,7.2vw,116px);line-height:0.9;text-transform:uppercase;letter-spacing:0.004em;color:#E9E3D3;margin:0;text-wrap:balance">What we pour</h2>
+        <p data-part style="--i:1;font-family:'Libre Franklin',sans-serif;font-size:clamp(17px,1.3vw,20px);line-height:1.55;color:#E9E3D3;margin:0;max-width:52ch;text-wrap:pretty">Espresso and filter, the usual milk drinks, teas, chai, matcha and hot chocolate. Scones, buttertarts, cookies and squares that change daily.</p>
+      </div>
+      <div class="bb-reveal" style="display:flex;flex-wrap:wrap;gap:40px 48px">
+        <div data-part style="--i:0;flex:1 1 min(100%,180px);display:flex;flex-direction:column;gap:16px">
+          <h3 style="margin:0;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:26px;line-height:1;letter-spacing:0.05em;text-transform:uppercase;color:#E9E3D3">Roasted</h3>
+          <span data-rule2 aria-hidden="true" style="--i:0;display:block;height:1px;background:#C9A54E"></span>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-family:'Libre Franklin',sans-serif;font-size:16px;line-height:1.4;color:#E9E3D3">
+            <li data-lit style="--i:0">Filter Coffee</li><li data-lit style="--i:1">Double Espresso</li><li data-lit style="--i:2">Americano</li><li data-lit style="--i:3">Macchiato</li><li data-lit style="--i:4">Cortado</li><li data-lit style="--i:5">Flat White</li><li data-lit style="--i:6">Cappuccino</li><li data-lit style="--i:7">Latte</li>
+          </ul>
+        </div>
+        <div data-part style="--i:1;flex:1 1 min(100%,180px);display:flex;flex-direction:column;gap:16px">
+          <h3 style="margin:0;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:26px;line-height:1;letter-spacing:0.05em;text-transform:uppercase;color:#E9E3D3">Steeped &amp; More</h3>
+          <span data-rule2 aria-hidden="true" style="--i:1;display:block;height:1px;background:#C9A54E"></span>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-family:'Libre Franklin',sans-serif;font-size:16px;line-height:1.4;color:#E9E3D3">
+            <li data-lit style="--i:8">Premium Pyramid Teas</li><li data-lit style="--i:9">Chai Latte</li><li data-lit style="--i:10">Matcha Latte</li><li data-lit style="--i:11">Hot Chocolate</li><li data-lit style="--i:12;color:#B5AB9C">Oat milk, flavour shots</li>
+          </ul>
+        </div>
+        <div data-part style="--i:2;flex:1 1 min(100%,180px);display:flex;flex-direction:column;gap:16px">
+          <h3 style="margin:0;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:26px;line-height:1;letter-spacing:0.05em;text-transform:uppercase;color:#E9E3D3">Food</h3>
+          <span data-rule2 aria-hidden="true" style="--i:2;display:block;height:1px;background:#C9A54E"></span>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-family:'Libre Franklin',sans-serif;font-size:16px;line-height:1.4;color:#E9E3D3">
+            <li data-lit style="--i:14">Cheddar &amp; Chive Scone</li><li data-lit style="--i:15">Buttertart</li><li data-lit style="--i:16">Cookies</li><li data-lit style="--i:17">Squares</li><li data-lit style="--i:18">Brownie</li><li data-lit style="--i:19">Biscotti</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bb-reveal" style="display:flex;flex-wrap:wrap;gap:28px 48px;align-items:flex-start;padding-top:26px;border-top:1px solid #3A322D">
+        <div data-part style="--i:0;flex:1 1 min(100%,260px);display:flex;flex-direction:column;gap:14px">
+          <p style="font-family:'Libre Franklin',sans-serif;font-size:clamp(16px,1.15vw,18px);line-height:1.6;color:#B5AB9C;margin:0;max-width:56ch;text-wrap:pretty">Oat milk, flavour shots, and a vegan and gluten-free square are on the board. The bakes change daily, so <a href="https://www.instagram.com/brickandbeamcoffee" target="_blank" rel="noreferrer" style="color:#E9E3D3;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;transition:color .3s" style-hover="color:#C9A54E">today's are on Instagram</a>.</p>
+        </div>
+        <div data-part style="--i:1;flex:1 1 min(100%,220px);display:flex;flex-direction:column;gap:12px">
+          <div style="font-family:'Mr Dafoe',cursive;font-size:clamp(34px,3.4vw,52px);line-height:1;color:#C9A54E">Any item iced</div>
+          <p style="font-family:'Libre Franklin',sans-serif;font-size:clamp(16px,1.15vw,18px);line-height:1.6;color:#E9E3D3;margin:0;max-width:30ch;text-wrap:pretty">Everything on the board can be iced. Say the word at the counter.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-bb="mq" data-rate="-0.3" data-living aria-hidden="true" style="position:relative;overflow:hidden;border-top:1px solid #2E2723;border-bottom:1px solid #2E2723;padding:22px 0">
+  <div style="transform:translate3d(var(--mx,0px),0,0);will-change:transform">
+    <div data-bb="track" style="display:flex;width:max-content;animation:bbMarquee 80s linear infinite reverse;animation-delay:-26.7s;will-change:transform">
+      <div style="display:flex;align-items:center;gap:clamp(22px,2.4vw,36px);padding-right:clamp(22px,2.4vw,36px);white-space:nowrap;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(28px,3vw,44px);line-height:1;letter-spacing:.06em;text-transform:uppercase;color:#B5AB9C">
+        <span>Filter Coffee</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Double Espresso</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Americano</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Macchiato</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Cortado</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Flat White</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Cappuccino</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Latte</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Chai Latte</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Matcha Latte</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Hot Chocolate</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Cheddar &amp; Chive Scone</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Buttertart</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span>
+      </div>
+      <div data-dup style="display:flex;align-items:center;gap:clamp(22px,2.4vw,36px);padding-right:clamp(22px,2.4vw,36px);white-space:nowrap;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(28px,3vw,44px);line-height:1;letter-spacing:.06em;text-transform:uppercase;color:#B5AB9C">
+        <span>Filter Coffee</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Double Espresso</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Americano</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Macchiato</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Cortado</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Flat White</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Cappuccino</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Latte</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Chai Latte</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Matcha Latte</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Hot Chocolate</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Cheddar &amp; Chive Scone</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span><span>Buttertart</span><span style="width:8px;height:8px;border-radius:50%;background:#C9A54E"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="room" data-screen-label="The room" style="position:relative;padding:clamp(96px,12vw,180px) clamp(20px,5vw,96px)">
+  <div style="max-width:1320px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:clamp(40px,5vw,72px)">
+    <div class="bb-reveal" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:26px">
+      <div data-part style="--i:0;display:flex;align-items:center;gap:16px"><span aria-hidden="true" style="display:block;width:40px;height:1px;background:#C9A54E"></span><span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">The room</span><span aria-hidden="true" style="display:block;width:40px;height:1px;background:#C9A54E"></span></div>
+      <h2 data-split="mask" data-kinetic style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(50px,8vw,132px);line-height:0.9;text-transform:uppercase;letter-spacing:0.004em;color:#E9E3D3;margin:0;max-width:16ch;text-wrap:balance">Brick walls, walnut counter, good coffee</h2>
+      <p data-part style="--i:2;font-family:'Libre Franklin',sans-serif;font-size:clamp(17px,1.3vw,20px);line-height:1.55;color:#E9E3D3;margin:0;max-width:46ch;text-wrap:pretty">Exposed brick inside and out. A live-edge walnut counter facing the window. People stay a while here, and plenty get work done.</p>
+    </div>
+    <div class="bb-reveal" role="list" aria-label="What is in the room" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:14px clamp(16px,2.2vw,30px);max-width:1100px">
+      <span role="listitem" data-part style="--i:0;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,50px);line-height:1;letter-spacing:.03em;text-transform:uppercase;color:#E9E3D3;transition:color .3s" style-hover="color:#C9A54E">Exposed brick</span><span aria-hidden="true" data-part style="--i:0;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(26px,3.4vw,50px);line-height:1;color:#C9A54E">&amp;</span>
+      <span role="listitem" data-part style="--i:1;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,50px);line-height:1;letter-spacing:.03em;text-transform:uppercase;color:#E9E3D3;transition:color .3s" style-hover="color:#C9A54E">Live-edge walnut</span><span aria-hidden="true" data-part style="--i:1;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(26px,3.4vw,50px);line-height:1;color:#C9A54E">&amp;</span>
+      <span role="listitem" data-part style="--i:2;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,50px);line-height:1;letter-spacing:.03em;text-transform:uppercase;color:#E9E3D3;transition:color .3s" style-hover="color:#C9A54E">Bench seating</span><span aria-hidden="true" data-part style="--i:2;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(26px,3.4vw,50px);line-height:1;color:#C9A54E">&amp;</span>
+      <span role="listitem" data-part style="--i:3;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,50px);line-height:1;letter-spacing:.03em;text-transform:uppercase;color:#E9E3D3;transition:color .3s" style-hover="color:#C9A54E">Black metal chairs</span><span aria-hidden="true" data-part style="--i:3;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(26px,3.4vw,50px);line-height:1;color:#C9A54E">&amp;</span>
+      <span role="listitem" data-part style="--i:4;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,50px);line-height:1;letter-spacing:.03em;text-transform:uppercase;color:#E9E3D3;transition:color .3s" style-hover="color:#C9A54E">Hardwood floors</span><span aria-hidden="true" data-part style="--i:4;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(26px,3.4vw,50px);line-height:1;color:#C9A54E">&amp;</span>
+      <span role="listitem" data-part style="--i:5;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,50px);line-height:1;letter-spacing:.03em;text-transform:uppercase;color:#E9E3D3;transition:color .3s" style-hover="color:#C9A54E">Big windows onto King</span><span aria-hidden="true" data-part style="--i:5;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(26px,3.4vw,50px);line-height:1;color:#C9A54E">&amp;</span>
+      <span role="listitem" data-part style="--i:6;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(26px,3.4vw,50px);line-height:1;letter-spacing:.03em;text-transform:uppercase;color:#E9E3D3;transition:color .3s" style-hover="color:#C9A54E">Plants, for sale</span>
+    </div>
+    <div class="bb-reveal" style="width:100%;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px 40px;padding-top:clamp(24px,3vw,40px);border-top:1px solid #2E2723">
+      <p data-part style="--i:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(16px,1.15vw,18px);line-height:1.6;color:#B5AB9C;margin:0;max-width:44ch;text-wrap:pretty">Black cups on black saucers, wood-and-steel shelving, and street reflections in every window.</p>
+      <div data-part style="--i:1;display:flex;align-items:baseline;gap:14px">
+        <span style="font-family:'Mr Dafoe',cursive;font-size:clamp(30px,3vw,44px);line-height:1;color:#C9A54E">Stay a while</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="club" data-screen-label="Run &amp; Walk Club" style="position:relative;padding:clamp(80px,10vw,150px) clamp(20px,5vw,96px);background:rgba(42,26,21,.55)">
+  <div class="bb-reveal" style="max-width:1320px;margin:0 auto;display:flex;flex-wrap:wrap;gap:clamp(28px,4vw,64px);align-items:center;justify-content:space-between">
+    <div data-part style="--i:0;flex:2 1 min(100%,260px);display:flex;flex-direction:column;gap:2px">
+      <div style="font-family:'Mr Dafoe',cursive;font-size:clamp(30px,3.2vw,48px);line-height:1;color:#C9A54E">Every Sunday</div>
+      <div data-parallax="0.28" style="transform:translate3d(0,var(--py,0px),0);will-change:transform">
+        <div data-kinetic style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(120px,16vw,248px);line-height:0.85;color:#E9E3D3;display:flex;align-items:baseline">8<span style="font-size:.4em;color:#C9A54E;margin-left:.06em">AM</span></div>
+      </div>
+    </div>
+    <div style="flex:3 1 min(100%,320px);display:flex;flex-direction:column;gap:22px;max-width:560px">
+      <h2 data-part style="--i:1;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(42px,4.8vw,76px);line-height:0.9;text-transform:uppercase;letter-spacing:0.004em;color:#E9E3D3;margin:0">Run &amp; Walk Club</h2>
+      <p data-part style="--i:2;font-family:'Libre Franklin',sans-serif;font-size:clamp(16px,1.15vw,18px);line-height:1.6;color:#E9E3D3;margin:0;max-width:44ch;text-wrap:pretty">Sundays at 8am, every week. Run or walk, any pace, then coffee.</p>
+      <a data-part class="bb-btn" href="https://www.instagram.com/brickandbeamcoffee" target="_blank" rel="noreferrer" style="--i:3;align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:999px;background:transparent;border:1px solid #7A6A60;color:#E9E3D3;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:border-color .35s cubic-bezier(.22,1,.36,1),color .35s cubic-bezier(.22,1,.36,1)" style-hover="border-color:#C9A54E;color:#C9A54E">Details on Instagram</a>
+    </div>
+  </div>
+</section>
+
+<section id="reviews" data-screen-label="Reviews" style="position:relative;padding:clamp(88px,11vw,176px) 0;overflow:hidden">
+  <div class="bb-reveal" style="max-width:1320px;margin:0 auto;padding:0 clamp(20px,5vw,96px);display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px">
+    <div data-part style="--i:0;display:flex;align-items:center;gap:16px"><span aria-hidden="true" style="display:block;width:40px;height:1px;background:#C9A54E"></span><span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Reviews</span><span aria-hidden="true" style="display:block;width:40px;height:1px;background:#C9A54E"></span></div>
+    <div data-part style="--i:1;display:flex;align-items:baseline;justify-content:center;gap:clamp(12px,2vw,28px);flex-wrap:wrap">
+      <div data-parallax="0.22" style="transform:translate3d(0,var(--py,0px),0);will-change:transform"><span data-count="4.5" data-kinetic style="display:inline-block;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(120px,16vw,240px);line-height:0.85;color:#C9A54E;font-variant-numeric:tabular-nums">4.5</span></div>
+      <span style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(22px,2.2vw,32px);line-height:1.05;color:#E9E3D3;text-transform:uppercase;text-align:left">from 82 reviews<br>on Google</span>
+    </div>
+    <a data-part href="https://www.google.com/maps/search/?api=1&amp;query=Brick+%26+Beam+Coffee+Co+4979+King+St+Beamsville+ON" target="_blank" rel="noreferrer" style="--i:2;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#C9A54E;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;transition:color .3s" style-hover="color:#E9E3D3">Read our reviews on Google</a>
+  </div>
+  <div data-bb="mq" data-rate="0.18" data-living aria-label="What people say" style="margin-top:clamp(48px,6vw,88px);overflow:hidden;border-top:1px solid #2E2723;border-bottom:1px solid #2E2723;padding:36px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)">
+    <div style="transform:translate3d(var(--mx,0px),0,0);will-change:transform">
+      <div data-bb="track" style="display:flex;width:max-content;animation:bbMarquee 84s linear infinite;animation-delay:-28s;will-change:transform" style-hover="animation-play-state:paused">
+        <div style="display:flex">
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span aria-hidden="true" style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“Thoughtful interior and space for people to work as well.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Google review highlight</footer></div></blockquote>
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span aria-hidden="true" style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“Great service and selection.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Google review highlight</footer></div></blockquote>
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span aria-hidden="true" style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“Atmosphere was really nice as well, sat and enjoyed my treats.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Google review highlight</footer></div></blockquote>
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span aria-hidden="true" style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“The Brick and Beam is officially open. What a nice place. Staff and ownership are great, and the atmosphere is amazing. Highly recommend.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Local Facebook group, opening week</footer></div></blockquote>
+        </div>
+        <div data-dup aria-hidden="true" style="display:flex">
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“Thoughtful interior and space for people to work as well.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Google review highlight</footer></div></blockquote>
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“Great service and selection.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Google review highlight</footer></div></blockquote>
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“Atmosphere was really nice as well, sat and enjoyed my treats.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Google review highlight</footer></div></blockquote>
+          <blockquote style="margin:0;padding-right:clamp(56px,7vw,112px);display:flex;align-items:baseline;gap:22px;width:min(78vw,600px);flex:none"><span style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:44px;line-height:1;color:#C9A54E">&amp;</span><div style="display:flex;flex-direction:column;gap:12px"><p style="margin:0;font-family:'Libre Franklin',sans-serif;font-size:clamp(18px,1.5vw,23px);line-height:1.45;color:#E9E3D3;text-wrap:pretty">“The Brick and Beam is officially open. What a nice place. Staff and ownership are great, and the atmosphere is amazing. Highly recommend.”</p><footer style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Local Facebook group, opening week</footer></div></blockquote>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="find" data-screen-label="Find us" style="position:relative;padding:clamp(88px,11vw,176px) clamp(20px,5vw,96px);background:rgba(11,9,8,.5)">
+  <div style="max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(40px,5vw,72px)">
+    <div class="bb-reveal" style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;align-items:center;gap:16px"><span data-rule aria-hidden="true" style="display:block;width:56px;height:1px;background:#C9A54E;transform-origin:left"></span><span data-part style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Find us</span></div>
+      <h2 data-split="mask" data-kinetic style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(50px,7.2vw,116px);line-height:0.9;text-transform:uppercase;letter-spacing:0.004em;color:#E9E3D3;margin:0;text-wrap:balance">Find us on King</h2>
+    </div>
+    <div class="bb-reveal" style="display:flex;flex-wrap:wrap;gap:clamp(24px,3vw,48px);align-items:stretch">
+      <div data-part style="--i:0;flex:2 1 min(100%,300px);display:flex;flex-direction:column;gap:30px;padding:clamp(24px,3vw,40px);background:rgba(29,23,20,.92);border:1px solid #2E2723;border-radius:24px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Address</div>
+          <div style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(28px,2.4vw,34px);line-height:1.1;color:#E9E3D3">4979 King St<br>Beamsville, Ontario L0R 1B0</div>
+          <p style="font-family:'Libre Franklin',sans-serif;font-size:15px;line-height:1.6;color:#B5AB9C;margin:0;max-width:40ch">Across from the Home Hardware.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Hours</div>
+          <div style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:clamp(28px,2.4vw,34px);line-height:1.1;color:#E9E3D3">7:00am to 5:00pm</div>
+          <div aria-label="Open Monday to Sunday" style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="padding:6px 10px;border:1px solid #C9A54E;border-radius:999px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A54E">Mon</span><span style="padding:6px 10px;border:1px solid #C9A54E;border-radius:999px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A54E">Tue</span><span style="padding:6px 10px;border:1px solid #C9A54E;border-radius:999px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A54E">Wed</span><span style="padding:6px 10px;border:1px solid #C9A54E;border-radius:999px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A54E">Thu</span><span style="padding:6px 10px;border:1px solid #C9A54E;border-radius:999px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A54E">Fri</span><span style="padding:6px 10px;border:1px solid #C9A54E;border-radius:999px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A54E">Sat</span><span style="padding:6px 10px;border:1px solid #C9A54E;border-radius:999px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A54E">Sun</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:'Libre Franklin',sans-serif;font-size:15px;line-height:1.6;color:#E9E3D3"><sc-if value="{{ isOpen }}"><span data-living aria-hidden="true" style="display:block;width:8px;height:8px;border-radius:50%;background:#4CBB6C;animation:bbBlink 2.4s ease-in-out infinite"></span></sc-if><sc-if value="{{ isClosed }}"><span data-living aria-hidden="true" style="display:block;width:8px;height:8px;border-radius:50%;background:#C24B3A;animation:bbBlink 2.4s ease-in-out infinite"></span></sc-if><span>{{ openLabel }}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="https://www.instagram.com/brickandbeamcoffee" target="_blank" rel="noreferrer" style="align-self:flex-start;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#E9E3D3;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;transition:color .3s" style-hover="color:#C9A54E">@brickandbeamcoffee</a>
+          <a href="mailto:brickandbeamcoffee@gmail.com" style="align-self:flex-start;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:13px;line-height:1.4;letter-spacing:0.04em;color:#E9E3D3;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;transition:color .3s" style-hover="color:#C9A54E">brickandbeamcoffee@gmail.com</a>
+        </div>
+        <a class="bb-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Brick+%26+Beam+Coffee+Co+4979+King+St+Beamsville+ON" target="_blank" rel="noreferrer" style="align-self:flex-start;margin-top:auto;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 28px;border-radius:999px;background:#C9A54E;border:1px solid #C9A54E;color:#15110E;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:background .35s cubic-bezier(.22,1,.36,1),border-color .35s cubic-bezier(.22,1,.36,1)" style-hover="background:#E9E3D3;border-color:#E9E3D3">Get directions</a>
+      </div>
+      <div data-part data-bb="map" style="--i:1;flex:3 1 min(100%,340px);min-height:460px;position:relative;background:#211B17;border:1px solid #2E2723;border-radius:24px;isolation:isolate;overflow:hidden">
+        <div ref="{{ mapRef }}" aria-label="Map showing 4979 King St, Beamsville" style="position:absolute;inset:0;z-index:0"></div>
+      </div>
+    </div>
+
+    <div class="bb-reveal" style="display:flex;flex-wrap:wrap;gap:clamp(28px,4vw,64px);align-items:flex-start;padding-top:clamp(40px,5vw,72px);border-top:1px solid #2E2723">
+      <div style="flex:2 1 min(100%,280px);display:flex;flex-direction:column;gap:14px">
+        <div data-part style="--i:0;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Get in touch</div>
+        <h3 data-part style="--i:1;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(40px,4.6vw,72px);line-height:0.92;text-transform:uppercase;color:#E9E3D3;margin:0">Send us a note</h3>
+        <p data-part style="--i:2;font-family:'Libre Franklin',sans-serif;font-size:clamp(16px,1.15vw,18px);line-height:1.6;color:#B5AB9C;margin:0;max-width:40ch;text-wrap:pretty">Questions, a coffee order for a group, or anything else. We reply from brickandbeamcoffee@gmail.com.</p>
+      </div>
+      <div data-part style="--i:2;flex:3 1 min(100%,320px)">
+        <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
+          <form onSubmit="{{ submit }}" noValidate="{{ true }}" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 240px), 1fr));gap:18px">
+            <label style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Name</span>
+              <input type="text" name="name" autoComplete="name" placeholder="Your name" value="{{ name }}" onChange="{{ onName }}" style="width:100%;box-sizing:border-box;padding:14px 18px;background:rgba(20,17,15,.92);border:1px solid #3A322D;border-radius:14px;color:#E9E3D3;font-family:'Libre Franklin',sans-serif;font-size:16px;line-height:1.4;outline:none;transition:border-color .3s;box-shadow:0 0 0 1px {{ nameRing }}" style-focus="border-color:#C9A54E">
+              <sc-if value="{{ nameError }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Libre Franklin',sans-serif;font-size:13px;line-height:1.4;color:#D9906F">{{ nameError }}</span></sc-if>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Email</span>
+              <input type="email" name="email" autoComplete="email" placeholder="you@example.com" value="{{ email }}" onChange="{{ onEmail }}" style="width:100%;box-sizing:border-box;padding:14px 18px;background:rgba(20,17,15,.92);border:1px solid #3A322D;border-radius:14px;color:#E9E3D3;font-family:'Libre Franklin',sans-serif;font-size:16px;line-height:1.4;outline:none;transition:border-color .3s;box-shadow:0 0 0 1px {{ emailRing }}" style-focus="border-color:#C9A54E">
+              <sc-if value="{{ emailError }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Libre Franklin',sans-serif;font-size:13px;line-height:1.4;color:#D9906F">{{ emailError }}</span></sc-if>
+            </label>
+            <label style="grid-column:1 / -1;display:flex;flex-direction:column;gap:8px">
+              <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#B5AB9C">Message</span>
+              <textarea name="message" rows="5" placeholder="What can we help with?" value="{{ message }}" onChange="{{ onMessage }}" style="width:100%;box-sizing:border-box;padding:14px 18px;background:rgba(20,17,15,.92);border:1px solid #3A322D;border-radius:14px;color:#E9E3D3;font-family:'Libre Franklin',sans-serif;font-size:16px;line-height:1.5;outline:none;resize:vertical;min-height:140px;transition:border-color .3s;box-shadow:0 0 0 1px {{ messageRing }}" style-focus="border-color:#C9A54E"></textarea>
+              <sc-if value="{{ messageError }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Libre Franklin',sans-serif;font-size:13px;line-height:1.4;color:#D9906F">{{ messageError }}</span></sc-if>
+            </label>
+            <div style="grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:18px 28px;margin-top:4px">
+              <button type="submit" class="bb-btn" disabled="{{ isSending }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 30px;border-radius:999px;background:#C9A54E;border:1px solid #C9A54E;color:#15110E;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:background .35s cubic-bezier(.22,1,.36,1),border-color .35s cubic-bezier(.22,1,.36,1)" style-hover="background:#E9E3D3;border-color:#E9E3D3">Send</button>
+              <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-family:'Libre Franklin',sans-serif;font-size:14px;line-height:1.4;color:#D9906F">Please check the fields marked above</span></sc-if>
+              <sc-if value="{{ isSending }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Libre Franklin',sans-serif;font-size:14px;line-height:1.4;color:#B5AB9C">Sending</span></sc-if>
+            </div>
+          </form>
+        </sc-if>
+        <sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="padding:32px;border:1px solid #3A322D;border-radius:24px;display:flex;gap:28px;align-items:center;flex-wrap:wrap;background:rgba(21,17,14,.92)">
+            <span aria-hidden="true" style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:72px;line-height:1;color:#C9A54E">&amp;</span>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:34px;line-height:1;text-transform:uppercase;color:#E9E3D3">Sent</div>
+              <p style="font-family:'Libre Franklin',sans-serif;font-size:16px;line-height:1.6;color:#B5AB9C;margin:0;max-width:44ch">Thanks. We will get back to you from brickandbeamcoffee@gmail.com.</p>
+              <button type="button" onClick="{{ reset }}" style="align-self:flex-start;background:none;border:none;padding:0;cursor:pointer;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#C9A54E;text-decoration:underline;text-underline-offset:5px;transition:color .3s" style-hover="color:#E9E3D3">Send another</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer data-bb="end" data-screen-label="The cup" style="position:relative;z-index:1;height:240vh">
+  <div style="position:sticky;top:0;height:100vh;overflow:hidden">
+    <div data-bb="end-still" aria-hidden="true" style="display:none;position:absolute;inset:0;background:#0B0908 url('assets/film-end.jpg') center / cover no-repeat"></div>
+    <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(11,9,8,.5) 0%,rgba(11,9,8,0) 22%,rgba(11,9,8,0) 70%,rgba(11,9,8,.72) 100%)"></div>
+    <div class="bb-band bb-e-rise" data-band="0,1" data-ramp="0.55" style="position:absolute;left:50%;top:clamp(84px,12vh,140px);transform:translateX(-50%);width:min(92vw,960px);isolation:isolate;--sa:.55;--sb:.35;text-align:center">
+      <div class="bb-glide" style="display:flex;flex-direction:column;align-items:center;gap:10px;will-change:transform">
+        <div data-stage="pre" style="font-family:'Mr Dafoe',cursive;font-size:clamp(34px,3.6vw,54px);line-height:1;color:#C9A54E;margin-bottom:-6px">Proudly Brewed</div>
+        <div data-bb="endmark" aria-label="Brick &amp; Beam" style="display:flex;justify-content:center;align-items:baseline;gap:0.16em;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(64px,10vw,164px);line-height:0.9;letter-spacing:0.01em;text-transform:uppercase;color:#E9E3D3">
+          <span class="bb-w" style="--th:0"><span aria-hidden="true" class="bb-wm" style="aspect-ratio:1023/128;-webkit-mask-image:url(assets/wordmark-brickbeam.svg);mask-image:url(assets/wordmark-brickbeam.svg)"></span></span>
+        </div>
+        <div data-stage="sub" style="display:flex;align-items:center;gap:14px;font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:clamp(11px,1vw,14px);letter-spacing:0.22em;text-transform:uppercase;color:#E9E3D3;white-space:nowrap">
+          <span>EST.</span><span style="color:#C9A54E">·</span><span>Coffee <span style="display:inline-block;font-size:.7em;line-height:1;vertical-align:.3279em;border-bottom:.1em solid currentColor;padding-bottom:.1113em">Co</span></span><span style="color:#C9A54E">·</span><span>2026</span>
+        </div>
+        <div data-stage="sub" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:#B5AB9C">Beamsville, Ontario</div>
+      </div>
+    </div>
+    <div style="position:absolute;left:clamp(20px,5vw,96px);right:clamp(20px,5vw,96px);bottom:26px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px 40px;text-shadow:0 1px 2px rgba(6,4,3,.95),0 3px 12px rgba(6,4,3,.78)">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:#E9E3D3">Open 7:00am to 5:00pm, every day</span>
+        <span style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:#E9E3D3">4979 King St, Beamsville, Ontario</span>
+        <span style="font-family:'Libre Franklin',sans-serif;font-size:12px;line-height:1.5;color:#8A8074">Map data from OpenStreetMap contributors</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+        <a href="https://www.instagram.com/brickandbeamcoffee" target="_blank" rel="noreferrer" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.5;letter-spacing:0.14em;text-transform:uppercase;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">@brickandbeamcoffee</a>
+        <a href="mailto:brickandbeamcoffee@gmail.com" style="font-family:'Libre Franklin',sans-serif;font-weight:500;font-size:12px;line-height:1.5;letter-spacing:0.14em;color:#E9E3D3;text-decoration:none;transition:color .3s" style-hover="color:#C9A54E">brickandbeamcoffee@gmail.com</a>
+        <span style="font-family:'Libre Franklin',sans-serif;font-size:12px;line-height:1.5;color:#8A8074">Speculative mockup, September 2026</span>
+      </div>
+    </div>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;videoSrc&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;assets/hero-film.mp4&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;filmStart&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:0.5,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;intro&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;introEnd&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.343,&quot;min&quot;:0,&quot;max&quot;:0.6,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;introEase&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.35,&quot;min&quot;:0,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;filmZoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.08,&quot;min&quot;:1,&quot;max&quot;:1.5,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitVideoSrc&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;assets/hero-film-portrait.mp4&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitStart&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:0.5,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitIntroEnd&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.16,&quot;min&quot;:0,&quot;max&quot;:0.6,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitZoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:1.5,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;heroLength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:360,&quot;min&quot;:240,&quot;max&quot;:600,&quot;step&quot;:20,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;sharpen&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.7,&quot;min&quot;:0,&quot;max&quot;:1.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;dim&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.72,&quot;min&quot;:0.4,&quot;max&quot;:0.9,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;grain&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Texture&quot;},&quot;formPreview&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;live&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;empty&quot;,&quot;error&quot;,&quot;sent&quot;],&quot;tsType&quot;:&quot;'live' | 'empty' | 'error' | 'sent'&quot;,&quot;section&quot;:&quot;Contact form&quot;}}">
+class Component extends DCLogic {
+  state = { name: '', email: '', message: '', status: 'empty', errors: {} };
+  rootRef = React.createRef();
+  mapRef = React.createRef();
+
+  componentDidMount() { this._bootEngine(); this._initMap(); this._clock = setInterval(() => this.forceUpdate(), 30000); }
+  componentDidUpdate(prev) {
+    if (prev.videoSrc !== this.props.videoSrc || prev.portraitVideoSrc !== this.props.portraitVideoSrc || prev.heroLength !== this.props.heroLength) { this._teardownEngine(); this._bootEngine(); return; }
+    if ((prev.sharpen !== this.props.sharpen || prev.dim !== this.props.dim || prev.filmStart !== this.props.filmStart || prev.filmZoom !== this.props.filmZoom || prev.intro !== this.props.intro || prev.introEnd !== this.props.introEnd || prev.introEase !== this.props.introEase || prev.portraitStart !== this.props.portraitStart || prev.portraitZoom !== this.props.portraitZoom || prev.portraitIntroEnd !== this.props.portraitIntroEnd) && this._film) this._film.set({ sharpen: this.props.sharpen ?? 0.7, dim: this.props.dim ?? 0.72, start: this.props.filmStart ?? 0, zoom: this.props.filmZoom ?? 1.08, intro: this.props.intro ?? true, introEnd: this.props.introEnd ?? 0.343, introEase: this.props.introEase ?? 0.35, portraitStart: this.props.portraitStart ?? 0, portraitZoom: this.props.portraitZoom ?? 1, portraitIntroEnd: this.props.portraitIntroEnd ?? 0.16 });
+  }
+  componentWillUnmount() {
+    this._dead = true; this._teardownEngine(); clearTimeout(this._mapT); clearInterval(this._clock);
+    if (this._ro) this._ro.disconnect(); if (this._mio) this._mio.disconnect();
+    if (this._map) { this._map.remove(); this._map = null; }
+  }
+  _bootEngine(tries = 0) {
+    if (this._dead) return;
+    const root = this.rootRef.current, E = window.BBFilm;
+    if (!root || !E) { if (tries < 120) this._engT = setTimeout(() => this._bootEngine(tries + 1), 100); return; }
+    this._film = E.init(root, {
+      videoSrc: this.props.videoSrc ?? 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5545328,
+      start: this.props.filmStart ?? 0, zoom: this.props.filmZoom ?? 1.08, zones: [0.576, 0.704], introEnd: this.props.introEnd ?? 0.343,
+      portraitVideoSrc: this.props.portraitVideoSrc ?? 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg', portraitVideoBytes: 4104064,
+      portraitStart: this.props.portraitStart ?? 0, portraitZoom: this.props.portraitZoom ?? 1, portraitZones: [0.29, 0.751], portraitIntroEnd: this.props.portraitIntroEnd ?? 0.16,
+      intro: this.props.intro ?? true, introEase: this.props.introEase ?? 0.35,
+      heroVh: this.props.heroLength ?? 360, sharpen: this.props.sharpen ?? 0.7, dim: this.props.dim ?? 0.72
+    });
+  }
+  _teardownEngine() { clearTimeout(this._engT); if (this._film) { this._film.destroy(); this._film = null; } }
+  _openInfo() {
+    try {
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date());
+      const h = Number(parts.find(p => p.type === 'hour').value) % 24, m = Number(parts.find(p => p.type === 'minute').value);
+      const mins = h * 60 + m, open = mins >= 7 * 60 && mins < 17 * 60;
+      return { open, label: open ? 'Open now, until 5pm' : (mins < 7 * 60 ? 'Opens at 7am' : 'Opens tomorrow at 7am') };
+    } catch (_) { return { open: true, label: 'Open 7am to 5pm' }; }
+  }
+  _initMap(tries = 0) {
+    const el = this.mapRef.current, L = window.L;
+    if (this._dead) return;
+    if (!el || !L) { if (tries < 80) this._mapT = setTimeout(() => this._initMap(tries + 1), 150); return; }
+    if (this._map) return;
+    const pos = [43.165655, -79.475602];
+    const map = this._map = L.map(el, { zoomControl: false, attributionControl: true, scrollWheelZoom: false, dragging: !L.Browser.mobile, tap: false }).setView(pos, 17);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
+    map.getPane('tilePane').style.filter = 'invert(1) hue-rotate(195deg) saturate(0.18) brightness(0.66) contrast(1.08) sepia(0.45)';
+    const icon = L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15], html: '<div style="width:30px;height:30px;border-radius:50%;background:#15110E;border:2px solid #C9A54E;color:#C9A54E;display:flex;align-items:center;justify-content:center;font:900 18px/1 \'Big Shoulders Display\',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.5)">&amp;</div>' });
+    L.marker(pos, { icon, keyboard: false }).addTo(map).bindTooltip('Brick & Beam Coffee Co', { direction: 'top', offset: [0, -19] });
+    const fit = () => { if (!this._map) return; map.invalidateSize(false); map.setView(pos, 17, { animate: false }); };
+    setTimeout(fit, 400);
+    if ('ResizeObserver' in window) { this._ro = new ResizeObserver(fit); this._ro.observe(el); }
+    if ('IntersectionObserver' in window) { this._mio = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) fit(); }); this._mio.observe(el); }
+  }
+  _validate(s) {
+    const err = {};
+    if (!s.name.trim()) err.name = 'Please add your name';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim())) err.email = 'Please add a valid email address';
+    if (s.message.trim().length < 4) err.message = 'Please write a short message';
+    return err;
+  }
+  _field(k) {
+    return (e) => {
+      const next = { [k]: e.target.value };
+      if (this.state.status === 'error') next.errors = this._validate({ ...this.state, ...next });
+      this.setState(next);
+    };
+  }
+  submit = (e) => {
+    e.preventDefault();
+    const errors = this._validate(this.state);
+    if (Object.keys(errors).length) { this.setState({ status: 'error', errors }); return; }
+    this.setState({ status: 'sending', errors: {} });
+    setTimeout(() => this.setState({ status: 'sent' }), 700);
+  };
+  reset = () => this.setState({ status: 'empty', errors: {}, name: '', email: '', message: '' });
+
+  renderVals() {
+    const preview = this.props.formPreview ?? 'live';
+    const live = preview === 'live';
+    const status = live ? this.state.status : preview;
+    const previewErrors = { name: 'Please add your name', email: 'Please add a valid email address', message: 'Please write a short message' };
+    const errors = live ? this.state.errors : (preview === 'error' ? previewErrors : {});
+    const values = live ? this.state : (preview === 'error' ? { name: '', email: 'hello@', message: '' } : { name: '', email: '', message: '' });
+    const ring = (k) => (errors[k] ? '#D9906F' : 'transparent');
+    const openInfo = this._openInfo();
+    return {
+      rootRef: this.rootRef, mapRef: this.mapRef,
+      grainOn: this.props.grain ?? true,
+      openLabel: openInfo.label, isOpen: openInfo.open, isClosed: !openInfo.open,
+      name: values.name, email: values.email, message: values.message,
+      onName: this._field('name'), onEmail: this._field('email'), onMessage: this._field('message'),
+      submit: this.submit, reset: this.reset,
+      isSent: status === 'sent', notSent: status !== 'sent', isError: status === 'error', isSending: status === 'sending',
+      nameError: errors.name, emailError: errors.email, messageError: errors.message,
+      nameRing: ring('name'), emailRing: ring('email'), messageRing: ring('message'),
+    };
+  }
+}
+</script>
+</body>
+</html>
