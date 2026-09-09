@@ -180,8 +180,8 @@ input,textarea,button{font:inherit}
 #shop{scroll-margin-top:-36px}
 #pour{scroll-margin-top:-23px}
 #room{scroll-margin-top:-36px}
-#club{scroll-margin-top:11px}
-#reviews{scroll-margin-top:-52px}
+#club{scroll-margin-top:-11px}
+#reviews{scroll-margin-top:-23px}
 #find{scroll-margin-top:-24px}
 /* The jump arrows (film-engine.js) stop at every #main > section plus the footer, which
    includes the hero and, on a page with no nav link of its own, the footer -- not just the
@@ -218,8 +218,8 @@ a,button{-webkit-tap-highlight-color:transparent}
   #shop{scroll-margin-top:21px}
   #pour{scroll-margin-top:-248px}
   #room{scroll-margin-top:22px}
-  #club{scroll-margin-top:-82px}
-  #reviews{scroll-margin-top:-13px}
+  #club{scroll-margin-top:37px}
+  #reviews{scroll-margin-top:29px}
   #find{scroll-margin-top:29px}
   /* Hero/footer arrow stops at this breakpoint: header is 96px tall here (two-row phone
      header), so 96+14 = 110px of headroom. Same reasoning as the base rule above. */
@@ -353,6 +353,24 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
 .bb-car-next{right:-6px}
 @media (min-width:640px){.bb-car-prev{left:-22px}.bb-car-next{right:-22px}}
 @media (max-width:900px){.bb-car-view{--edge:1.25rem}}
+/* Carousel lightbox: click any photo (centred or not, real cell or clone) to both centre it in
+   its carousel and enlarge it here. Restrained: dark backdrop, brass-edged frame, no chrome
+   beyond a close button and a caption carrying the same alt text the thumbnail had. The open/
+   close motion is a plain opacity+scale transition, which the page's own reduced-motion rule
+   (killing all transitions/animations, see above) already turns into an instant appear/disappear
+   with zero extra CSS needed here. */
+.bb-lb{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:28px}
+.bb-lb[hidden]{display:none}
+.bb-lb-backdrop{position:absolute;inset:0;background:rgba(11,9,8,.92);opacity:0;transition:opacity .32s ease}
+.bb-lb-dialog{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:100%;max-height:100%;opacity:0;transform:scale(.96);transition:opacity .32s ease,transform .32s cubic-bezier(.22,1,.36,1)}
+.bb-lb.bb-lb-open .bb-lb-backdrop{opacity:1}
+.bb-lb.bb-lb-open .bb-lb-dialog{opacity:1;transform:scale(1)}
+.bb-lb-dialog:focus{outline:none}
+.bb-lb-img{display:block;max-width:min(88vw,880px);max-height:min(68vh,880px);width:auto;height:auto;object-fit:contain;border-radius:8px;border:1px solid rgba(201,165,78,.45);box-shadow:0 30px 70px rgba(0,0,0,.55);background:#15110E}
+.bb-lb-caption{margin:0;max-width:min(86vw,640px);text-align:center;font-family:'Libre Franklin',sans-serif;font-size:12px;line-height:1.6;letter-spacing:.03em;color:#B5AB9C}
+.bb-lb-close{position:absolute;top:-16px;right:-16px;width:40px;height:40px;border-radius:50%;background:#0B0908;border:1px solid rgba(233,227,211,.3);color:#E9E3D3;display:grid;place-items:center;padding:0;cursor:pointer;transition:border-color .3s,color .3s;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.bb-lb-close:hover{border-color:#C9A54E;color:#C9A54E}
+@media (max-width:600px){.bb-lb{padding:20px}.bb-lb-close{top:-10px;right:-10px;width:36px;height:36px}}
 .leaflet-container{background:#211B17!important}
 .leaflet-control-attribution{background:rgba(21,17,14,.85)!important;color:#B5AB9C!important;font:11px/1.5 'Libre Franklin',sans-serif!important}
 .leaflet-control-attribution a{color:#C9A54E!important}
