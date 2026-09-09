@@ -47,8 +47,36 @@ input,textarea,button{font:inherit}
 .bb-skip:focus{top:16px}
 @keyframes bbPulse{0%,100%{opacity:.4}50%{opacity:.95}}
 @keyframes bbSpin{to{transform:rotate(360deg)}}
-@keyframes bbCoin{from{transform:rotateX(10deg) rotateY(0deg)}to{transform:rotateX(10deg) rotateY(360deg)}}
-@keyframes bbCoinGlint{0%,100%{opacity:.85}25%,75%{opacity:.15}50%{opacity:.85}}
+/* ---- bb-coin: full CSS 3D coin (64-slab rim, struck brass faces) ---- */
+.bb-coin-stage{--bb-coin-size:clamp(160px,18vw,240px);--bb-coin-thickness:15px;--bb-spin:10s;width:var(--bb-coin-size);height:var(--bb-coin-size);perspective:900px;border-radius:50%;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.bb-coin-tilt{width:100%;height:100%;transform:rotateX(10deg);transform-style:preserve-3d}
+.bb-coin{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:bb-coin-spin var(--bb-spin) linear infinite;will-change:transform}
+@keyframes bb-coin-spin{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
+/* Every layer is its own plane in the 3D context. Which side is showing is
+   decided by the step-switched opacity below rather than by backface-visibility,
+   because software renderers skip backface culling/depth sorting and paint the
+   far side on top. Keep this as written. */
+.bb-plate,.bb-art,.bb-lit{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.bb-side-a{transform:translateZ(calc(var(--bb-coin-thickness) / 2 + var(--z)))}
+.bb-side-b{transform:rotateY(180deg) translateZ(calc(var(--bb-coin-thickness) / 2 + var(--z)));animation-delay:calc(var(--bb-spin) / -2)}
+.bb-plate{--z:0px;background:radial-gradient(circle at 34% 24%,#2C2721 0%,#1A1613 26%,#100D0B 58%,#070605 100%);box-shadow:inset 0 0 0 2px rgba(201,165,78,.5),inset 0 0 0 6px rgba(9,7,6,.9),inset 0 10px 30px rgba(233,227,211,.06),inset 0 -14px 34px rgba(0,0,0,.55)}
+.bb-art{--z:.15px;width:100%;height:100%;object-fit:contain}
+.bb-plate,.bb-art{animation:bb-side-show var(--bb-spin) linear infinite;will-change:opacity}
+@keyframes bb-side-show{0%{opacity:1}24.99%{opacity:1}25%{opacity:0}74.99%{opacity:0}75%{opacity:1}100%{opacity:1}}
+.bb-lit{will-change:opacity}
+.bb-lit--sheen{--z:.3px;background:radial-gradient(120% 95% at 26% 16%,rgba(201,165,78,.28) 0%,rgba(201,165,78,.10) 38%,rgba(201,165,78,0) 66%),linear-gradient(118deg,rgba(233,227,211,0) 38%,rgba(233,227,211,.16) 47%,rgba(233,227,211,0) 56%);animation:bb-face-sheen var(--bb-spin) linear infinite}
+.bb-lit--shade{--z:.45px;background:radial-gradient(135% 125% at 74% 90%,rgba(0,0,0,.55) 0%,rgba(0,0,0,.3) 48%,rgba(0,0,0,0) 80%);animation:bb-face-shade var(--bb-spin) linear infinite}
+@keyframes bb-face-sheen{0%{opacity:1}20%{opacity:.18}25%{opacity:0}75%{opacity:0}80%{opacity:.18}100%{opacity:1}}
+@keyframes bb-face-shade{0%{opacity:0}16%{opacity:.55}25%{opacity:0}75%{opacity:0}84%{opacity:.55}100%{opacity:0}}
+.bb-rim{position:absolute;inset:0;transform-style:preserve-3d}
+.bb-rim i{position:absolute;left:50%;top:50%;width:calc(var(--bb-coin-size) * 3.14159 / 64 * 1.12);height:var(--bb-coin-thickness);backface-visibility:hidden;-webkit-backface-visibility:hidden;background:repeating-linear-gradient(90deg,rgba(247,232,186,.20) 0 1px,rgba(46,34,16,.26) 1px 2.5px,rgba(0,0,0,0) 2.5px 4px),linear-gradient(180deg,#4A3716 0%,#8E7130 13%,#C9A54E 34%,#E6C87E 50%,#BC9843 68%,#7A6027 88%,#40300F 100%);transform:translate(-50%,-50%) rotateZ(calc(var(--i) * 5.625deg)) translateY(calc(var(--bb-coin-size) / -2)) rotateX(90deg)}
+@media (prefers-reduced-motion: reduce){
+  .bb-coin{animation:none;transform:rotateY(0deg)}
+  .bb-plate,.bb-art,.bb-lit{animation:none}
+  .bb-side-a{opacity:1}
+  .bb-side-a.bb-lit--shade{opacity:0}
+  .bb-side-b{opacity:0}
+}
 @keyframes bbBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
 @keyframes bbMarquee{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
 @keyframes bbFadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
@@ -361,13 +389,84 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
         </div>
       </div>
       <div data-part style="--i:1;flex:0 0 auto;display:flex;justify-content:center;padding:clamp(8px,2vw,24px)">
-        <div data-spin data-living style="width:clamp(160px,18vw,240px);height:clamp(160px,18vw,240px);border-radius:50%;box-shadow:0 24px 60px rgba(0,0,0,.55);perspective:900px">
-          <div style="position:relative;width:100%;height:100%;border-radius:50%;transform-style:preserve-3d;animation:bbCoin 10s linear infinite;will-change:transform">
-            <img src="assets/logo.png" alt="Brick &amp; Beam badge, an ampersand ringed by the name and the year 2026" style="position:absolute;inset:0;display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 2px rgba(233,227,211,.22)">
-            <div aria-hidden="true" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 24%,rgba(255,246,222,.4) 0%,rgba(255,246,222,0) 46%),linear-gradient(135deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 42%,rgba(0,0,0,0) 58%,rgba(0,0,0,.2) 100%);backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:bbCoinGlint 10s linear infinite;will-change:opacity;pointer-events:none"></div>
-            <div aria-hidden="true" style="position:absolute;left:50%;top:0;bottom:0;width:clamp(7px,3vw,12px);margin-left:calc(clamp(7px,3vw,12px)/-2);border-radius:999px;background:linear-gradient(180deg,#F4DFA0 0%,#C9A54E 18%,#7A5C26 50%,#C9A54E 82%,#F4DFA0 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);transform:rotateY(90deg)"></div>
-            <img src="assets/logo-secondary.png" alt="" aria-hidden="true" style="position:absolute;inset:0;display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);box-shadow:inset 0 0 0 2px rgba(233,227,211,.22)">
-            <div aria-hidden="true" style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 24%,rgba(255,246,222,.4) 0%,rgba(255,246,222,0) 46%),linear-gradient(135deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 42%,rgba(0,0,0,0) 58%,rgba(0,0,0,.2) 100%);backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);animation:bbCoinGlint 10s linear infinite;will-change:opacity;pointer-events:none"></div>
+        <div class="bb-coin-stage" data-spin data-living>
+          <div class="bb-coin-tilt">
+            <div class="bb-coin">
+              <div class="bb-rim" aria-hidden="true">
+                <i style="--i:0"></i>
+                <i style="--i:1"></i>
+                <i style="--i:2"></i>
+                <i style="--i:3"></i>
+                <i style="--i:4"></i>
+                <i style="--i:5"></i>
+                <i style="--i:6"></i>
+                <i style="--i:7"></i>
+                <i style="--i:8"></i>
+                <i style="--i:9"></i>
+                <i style="--i:10"></i>
+                <i style="--i:11"></i>
+                <i style="--i:12"></i>
+                <i style="--i:13"></i>
+                <i style="--i:14"></i>
+                <i style="--i:15"></i>
+                <i style="--i:16"></i>
+                <i style="--i:17"></i>
+                <i style="--i:18"></i>
+                <i style="--i:19"></i>
+                <i style="--i:20"></i>
+                <i style="--i:21"></i>
+                <i style="--i:22"></i>
+                <i style="--i:23"></i>
+                <i style="--i:24"></i>
+                <i style="--i:25"></i>
+                <i style="--i:26"></i>
+                <i style="--i:27"></i>
+                <i style="--i:28"></i>
+                <i style="--i:29"></i>
+                <i style="--i:30"></i>
+                <i style="--i:31"></i>
+                <i style="--i:32"></i>
+                <i style="--i:33"></i>
+                <i style="--i:34"></i>
+                <i style="--i:35"></i>
+                <i style="--i:36"></i>
+                <i style="--i:37"></i>
+                <i style="--i:38"></i>
+                <i style="--i:39"></i>
+                <i style="--i:40"></i>
+                <i style="--i:41"></i>
+                <i style="--i:42"></i>
+                <i style="--i:43"></i>
+                <i style="--i:44"></i>
+                <i style="--i:45"></i>
+                <i style="--i:46"></i>
+                <i style="--i:47"></i>
+                <i style="--i:48"></i>
+                <i style="--i:49"></i>
+                <i style="--i:50"></i>
+                <i style="--i:51"></i>
+                <i style="--i:52"></i>
+                <i style="--i:53"></i>
+                <i style="--i:54"></i>
+                <i style="--i:55"></i>
+                <i style="--i:56"></i>
+                <i style="--i:57"></i>
+                <i style="--i:58"></i>
+                <i style="--i:59"></i>
+                <i style="--i:60"></i>
+                <i style="--i:61"></i>
+                <i style="--i:62"></i>
+                <i style="--i:63"></i>
+              </div>
+              <div class="bb-plate bb-side-a"></div>
+              <img class="bb-art bb-side-a" src="assets/logo.png" alt="Brick &amp; Beam">
+              <div class="bb-lit bb-lit--sheen bb-side-a"></div>
+              <div class="bb-lit bb-lit--shade bb-side-a"></div>
+              <div class="bb-plate bb-side-b"></div>
+              <img class="bb-art bb-side-b" src="assets/logo-secondary.png" alt="" aria-hidden="true">
+              <div class="bb-lit bb-lit--sheen bb-side-b"></div>
+              <div class="bb-lit bb-lit--shade bb-side-b"></div>
+            </div>
           </div>
         </div>
       </div>
