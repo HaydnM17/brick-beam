@@ -626,6 +626,76 @@
       io.observe(el); cleanups.push(() => io.disconnect());
     });
 
+    /* ---------------- Shared lightbox for the depth-drift photo carousels ----------------
+       One dialog, reused by both carousels: a click on any cell - real or clone, centred or not -
+       both centres that photo in its carousel and opens the same photo here in one action, so the
+       carousel is already sitting on it when this closes. Scroll is blocked by swallowing the
+       wheel/touch/key input that would move it, never by touching overflow/position on the body:
+       the film maps its frame from window.scrollY every tick, and the usual position:fixed/
+       overflow:hidden scroll-lock trick can change that number as a side effect - swallowing the
+       input instead means the number never has a reason to move while this is open. */
+    let openLightbox = null;
+    (function setupLightbox() {
+      const lb = q('[data-bb="lightbox"]');
+      if (!lb) return;
+      const backdrop = q('[data-bb="lightbox-backdrop"]', lb), dialog = q('.bb-lb-dialog', lb);
+      const closeBtn = q('[data-bb="lightbox-close"]', lb), img = q('[data-bb="lightbox-img"]', lb);
+      const caption = q('[data-bb="lightbox-caption"]', lb);
+      if (!backdrop || !dialog || !closeBtn || !img) return;
+      // The DC template renderer turns a bare `hidden` attribute into hidden="" (an empty-string
+      // prop), which React's boolean-attribute handling treats as falsy and drops - so the markup's
+      // own `hidden` never actually lands. Force it here the same way the jump arrows force theirs
+      // (a direct DOM property write after mount), rather than fighting the renderer for it.
+      lb.hidden = true;
+      let lbOpen = false, returnEl = null, closeT = 0;
+      const focusables = () => Array.from(dialog.querySelectorAll('button,[href],input,select,textarea,[tabindex]'))
+        .filter(el => el.tabIndex !== -1 && !el.disabled && el.offsetParent !== null);
+      function openLB(sourceImg, fromEl) {
+        if (!sourceImg) return;
+        clearTimeout(closeT);
+        returnEl = fromEl || null;
+        img.src = sourceImg.currentSrc || sourceImg.src;
+        const w = sourceImg.getAttribute('width'), h = sourceImg.getAttribute('height');
+        if (w) img.setAttribute('width', w); else img.removeAttribute('width');
+        if (h) img.setAttribute('height', h); else img.removeAttribute('height');
+        const alt = sourceImg.alt || '';
+        img.alt = alt;
+        if (caption) caption.textContent = alt;
+        lb.hidden = false;
+        lbOpen = true;
+        void lb.offsetHeight;                                                 // commit the closed state before animating off it
+        lb.classList.add('bb-lb-open');
+        dialog.focus({ preventScroll: true });
+      }
+      function closeLB() {
+        if (!lbOpen) return;
+        lbOpen = false;
+        lb.classList.remove('bb-lb-open');
+        const finish = () => { lb.hidden = true; img.src = ''; };
+        clearTimeout(closeT);
+        if (reduced()) finish(); else closeT = setTimeout(finish, 320);       // let the fade-out finish before hiding
+        if (returnEl && document.contains(returnEl)) returnEl.focus({ preventScroll: true });
+        returnEl = null;
+      }
+      on(backdrop, 'click', closeLB);
+      on(closeBtn, 'click', closeLB);
+      on(lb, 'keydown', e => {
+        if (e.key === 'Escape') { e.preventDefault(); closeLB(); return; }
+        if (e.key !== 'Tab') return;
+        const f = focusables();
+        if (!f.length) { e.preventDefault(); return; }
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      });
+      const LB_SCROLL_KEYS = { ' ': 1, PageDown: 1, PageUp: 1, Home: 1, End: 1, ArrowUp: 1, ArrowDown: 1 };
+      on(window, 'wheel', e => { if (lbOpen) e.preventDefault(); }, { passive: false });
+      on(window, 'touchmove', e => { if (lbOpen) e.preventDefault(); }, { passive: false });
+      on(window, 'keydown', e => { if (lbOpen && LB_SCROLL_KEYS[e.key]) e.preventDefault(); }, { passive: false });
+      cleanups.push(() => clearTimeout(closeT));
+      openLightbox = openLB;
+    })();
+
     /* ---------------- Depth-drift photo carousels (#pour, #room) ----------------
        One scroll position per carousel drives everything: an rAF loop advances it for the idle drift,
        and a trackpad swipe, a touch drag, an arrow-key press and the prev/next buttons all move the same
@@ -633,7 +703,14 @@
        frame, as a pure function of its own distance from that number - there is no separate slide index.
        Off-screen pausing reuses the same IntersectionObserver shape as the [data-living] loop just above,
        just gating a JS rAF loop instead of a CSS animation (bb-off only pauses animation-play-state, which
-       a scrollLeft-driven loop ignores). Full writeup: the depth-drift-carousel skill. */
+       a scrollLeft-driven loop ignores). Full writeup: the depth-drift-carousel skill.
+       Every cell is clickable, including the two aria-hidden clone sets that make the loop seamless -
+       clicking one resolves to its photo index (cells.indexOf(cell) % originals.length) and always centres
+       + opens the instance living in the currently-normalised band (cellFor below), never the literal node
+       clicked, so the settle-timeout's wrap() below never has to snap the view back after landing - that
+       snap is exactly the visible jump watched for. The lightbox itself always reads/returns focus to the
+       real (non-hidden, tabbable) original for that index, since focusing an aria-hidden clone would be an
+       accessibility bug even though it is visually identical. */
     qa('[data-bb="car"]').forEach(strip => {
       const view = q('.bb-car-view', strip), track = q('.bb-car-track', strip);
       const prevBtn = q('.bb-car-prev', strip), nextBtn = q('.bb-car-next', strip);
@@ -692,9 +769,13 @@
         });
       }
 
-      // Independent pause reasons: hover, a pointer held down, the tab hidden, and the strip off-screen.
-      // Only the aggregate's edge (true<->false) should start or stop the rAF loop.
-      const held = { hover: false, press: false, hidden: document.hidden, off: true, step: false };
+      // Independent pause reasons: a pointer held down, the tab hidden, the strip off-screen, and a
+      // step (smooth-scroll) in flight. Only the aggregate's edge (true<->false) should start or stop
+      // the rAF loop. Deliberately no 'hover' reason: the client asked that hovering never stop the
+      // drift, so it was dropped rather than merely never set - off-screen and step exist for
+      // performance and to stop the drift fighting a smooth-scroll already in flight, neither of
+      // which hovering has anything to do with.
+      const held = { press: false, hidden: document.hidden, off: true, step: false };
       let carRunning = false, carLast = 0, carRaf = null;
       function frameCar(now) {
         if (!carRunning) return;
@@ -706,7 +787,7 @@
         carRaf = requestAnimationFrame(frameCar);
       }
       function syncCar() {
-        const should = !reduced() && !held.hover && !held.press && !held.hidden && !held.off && !held.step;
+        const should = !reduced() && !held.press && !held.hidden && !held.off && !held.step;
         if (should === carRunning) return;
         carRunning = should;
         if (carRunning) { carLast = performance.now(); pos = null; carRaf = requestAnimationFrame(frameCar); }
@@ -731,17 +812,39 @@
         list.forEach((cell, i) => { const d = Math.abs(cell.offsetLeft + cell.offsetWidth / 2 - mid); if (d < dist) { dist = d; best = i; } });
         goTo(list[Math.min(list.length - 1, Math.max(0, best + dir))]);
       }
+      // Whichever instance of photo idx is the one goTo() should aim at: under reduced motion that's
+      // just the plain original (clones don't exist there); otherwise it's always the clone living in
+      // the currently-normalised middle band, so the settle-timeout's wrap() never has to correct it.
+      const cellFor = idx => { const list = activeCells(); return reduced() ? list[idx] : list[originals.length + idx]; };
       on(prevBtn, 'click', () => stepCar(-1));
       on(nextBtn, 'click', () => stepCar(1));
       on(view, 'keydown', e => { if (e.key === 'ArrowLeft') { stepCar(-1); e.preventDefault(); } else if (e.key === 'ArrowRight') { stepCar(1); e.preventDefault(); } });
-      on(track, 'click', e => { const cell = e.target.closest('.bb-car-cell'); if (cell && !cell.hasAttribute('aria-hidden')) goTo(cell); });
+      // A tap opens the lightbox on the same photo goTo() centres on; a drag/swipe release must not.
+      // pressed/dragged are this carousel's own gesture state, so a drag never leaks into another
+      // strip's click and a genuinely slow, still tap (long press, little movement) still opens.
+      const DRAG_PX = 10, DRAG_MS = 600;
+      let pressed = false, dragged = false, downX = 0, downY = 0, downT = 0;
+      on(view, 'pointerdown', e => {
+        holdReason('press', true);
+        pressed = true; dragged = false; downX = e.clientX; downY = e.clientY; downT = performance.now();
+      });
+      on(window, 'pointermove', e => {
+        if (!pressed || dragged) return;
+        if (performance.now() - downT > DRAG_MS) return;
+        if (Math.abs(e.clientX - downX) > DRAG_PX || Math.abs(e.clientY - downY) > DRAG_PX) dragged = true;
+      }, { passive: true });
+      on(window, 'pointerup', () => { pressed = false; holdReason('press', false); }, { passive: true });
+      on(track, 'click', e => {
+        if (dragged) return;                                                  // that release was a swipe, not a tap
+        const cell = e.target.closest('.bb-car-cell');
+        if (!cell) return;
+        const idx = cells.indexOf(cell) % originals.length;
+        const target = cellFor(idx);
+        if (!target) return;
+        goTo(target);
+        if (openLightbox) { const orig = originals[idx], img = orig && q('img', orig); if (img) openLightbox(img, orig); }
+      });
       on(view, 'scroll', paintCar, { passive: true });
-      on(strip, 'pointerenter', () => holdReason('hover', true));
-      on(strip, 'pointerleave', () => holdReason('hover', false));
-      on(strip, 'focusin', () => holdReason('hover', true));
-      on(strip, 'focusout', () => holdReason('hover', false));
-      on(view, 'pointerdown', () => holdReason('press', true));
-      on(window, 'pointerup', () => holdReason('press', false), { passive: true });
       on(document, 'visibilitychange', () => holdReason('hidden', document.hidden));
 
       function settleCar() {
