@@ -48,7 +48,7 @@ input,textarea,button{font:inherit}
 @keyframes bbPulse{0%,100%{opacity:.4}50%{opacity:.95}}
 @keyframes bbSpin{to{transform:rotate(360deg)}}
 /* ---- bb-coin: full CSS 3D coin (64-slab rim, struck brass faces) ---- */
-.bb-coin-stage{--bb-coin-size:clamp(160px,18vw,240px);--bb-coin-thickness:15px;--bb-spin:10s;width:var(--bb-coin-size);height:var(--bb-coin-size);perspective:900px;border-radius:50%;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.bb-coin-stage{--bb-coin-size:clamp(160px,18vw,240px);--bb-coin-thickness:15px;--bb-spin:10s;width:var(--bb-coin-size);height:var(--bb-coin-size);perspective:900px}
 .bb-coin-tilt{width:100%;height:100%;transform:rotateX(10deg);transform-style:preserve-3d}
 .bb-coin{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:bb-coin-spin var(--bb-spin) linear infinite;will-change:transform}
 @keyframes bb-coin-spin{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
@@ -58,7 +58,7 @@ input,textarea,button{font:inherit}
    far side on top. Keep this as written. */
 .bb-plate,.bb-art,.bb-lit{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .bb-side-a{transform:translateZ(calc(var(--bb-coin-thickness) / 2 + var(--z)))}
-.bb-side-b{transform:rotateY(180deg) translateZ(calc(var(--bb-coin-thickness) / 2 + var(--z)));animation-delay:calc(var(--bb-spin) / -2)}
+.bb-side-b{transform:rotateY(180deg) translateZ(calc(var(--bb-coin-thickness) / 2 + var(--z)))}
 .bb-plate{--z:0px;background:radial-gradient(circle at 34% 24%,#2C2721 0%,#1A1613 26%,#100D0B 58%,#070605 100%);box-shadow:inset 0 0 0 2px rgba(201,165,78,.5),inset 0 0 0 6px rgba(9,7,6,.9),inset 0 10px 30px rgba(233,227,211,.06),inset 0 -14px 34px rgba(0,0,0,.55)}
 .bb-art{--z:.15px;width:100%;height:100%;object-fit:contain}
 .bb-plate,.bb-art{animation:bb-side-show var(--bb-spin) linear infinite;will-change:opacity}
@@ -66,6 +66,10 @@ input,textarea,button{font:inherit}
 .bb-lit{will-change:opacity}
 .bb-lit--sheen{--z:.3px;background:radial-gradient(120% 95% at 26% 16%,rgba(201,165,78,.28) 0%,rgba(201,165,78,.10) 38%,rgba(201,165,78,0) 66%),linear-gradient(118deg,rgba(233,227,211,0) 38%,rgba(233,227,211,.16) 47%,rgba(233,227,211,0) 56%);animation:bb-face-sheen var(--bb-spin) linear infinite}
 .bb-lit--shade{--z:.45px;background:radial-gradient(135% 125% at 74% 90%,rgba(0,0,0,.55) 0%,rgba(0,0,0,.3) 48%,rgba(0,0,0,0) 80%);animation:bb-face-shade var(--bb-spin) linear infinite}
+/* Standalone longhand placed after every animation: shorthand above (bb-plate/bb-art,
+   bb-lit--sheen, bb-lit--shade) so the shorthand does not reset it back to 0s. Must stay
+   last among rules touching animation sub-properties on coin elements. */
+.bb-side-b{animation-delay:calc(var(--bb-spin) / -2)}
 @keyframes bb-face-sheen{0%{opacity:1}20%{opacity:.18}25%{opacity:0}75%{opacity:0}80%{opacity:.18}100%{opacity:1}}
 @keyframes bb-face-shade{0%{opacity:0}16%{opacity:.55}25%{opacity:0}75%{opacity:0}84%{opacity:.55}100%{opacity:0}}
 .bb-rim{position:absolute;inset:0;transform-style:preserve-3d}
@@ -261,7 +265,7 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
 .bb-pinned .bb-reveal [data-part],.bb-pinned .bb-mask>span,.bb-pinned .bb-reveal [data-rule],.bb-pinned [data-when="after"]{opacity:1!important;transform:none!important;transition:none!important}
 .bb-pinned [data-bb="pour"] [data-lit]{opacity:1!important}
 .bb-pinned [data-bb="pour"] [data-rule2]{transform:scaleX(1)!important}
-.bb-pinned [data-parallax],.bb-pinned .bb-glide,.bb-pinned [data-kinetic],.bb-pinned [data-spin],.bb-pinned [data-bb="mq"]>div{transform:none!important}
+.bb-pinned [data-parallax],.bb-pinned .bb-glide,.bb-pinned [data-kinetic],.bb-pinned .bb-coin,.bb-pinned [data-bb="mq"]>div{transform:none!important}
 .bb-pinned [data-bb="steam"]{opacity:0!important}
 .bb-pinned [data-bb="track"]{animation:none!important;flex-wrap:wrap;width:auto!important;justify-content:center}
 .bb-pinned [data-bb="track"] [data-dup]{display:none}
@@ -271,7 +275,7 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
   .bb-reveal [data-part],.bb-mask>span,.bb-reveal [data-rule],[data-when="after"]{opacity:1!important;transform:none!important}
   [data-bb="pour"] [data-lit]{opacity:1!important}
   [data-bb="pour"] [data-rule2]{transform:scaleX(1)!important}
-  [data-parallax],.bb-glide,[data-kinetic],[data-spin],[data-bb="mq"]>div{transform:none!important}
+  [data-parallax],.bb-glide,[data-kinetic],.bb-coin,[data-bb="mq"]>div{transform:none!important}
   [data-bb="steam"]{opacity:0!important}
   [data-bb="track"]{flex-wrap:wrap;width:auto!important;justify-content:center}
   [data-bb="track"] [data-dup]{display:none}
