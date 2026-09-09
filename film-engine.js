@@ -150,15 +150,15 @@
 
   function init(root, opts) {
     opts = Object.assign({
-      videoSrc: 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5545328,
-      start: 0, zoom: 1.08, zones: [0.576, 0.704], introEnd: 0.343,
+      videoSrc: 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5417655,
+      start: 0, zoom: 1.08, zones: [0.5645, 0.6899], introEnd: 0.3361,
       // The portrait film. Its own source, its own poster, its own byte count for the ring, its own mapping.
-      portraitVideoSrc: 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg', portraitVideoBytes: 4104064,
+      portraitVideoSrc: 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg', portraitVideoBytes: 4056359,
       // portraitIntroEnd has to land inside the pour zone, below portraitZones[0], or the intro hands the
       // playhead over past the frame the hero scroll is aiming at and the hero has nothing left to scrub.
-      // 0.16 (~2.73s) lands safely past the drip becoming a continuous stream (~2.0s) and stays below
-      // portraitZones[0] (0.42, ~7.16s), which is where the hero's scrub range now ends.
-      portraitStart: 0, portraitZoom: 1, portraitZones: [0.42, 0.751], portraitIntroEnd: 0.16,
+      // 0.1569 (~2.73s) lands safely past the drip becoming a continuous stream (~2.0s) and stays below
+      // portraitZones[0] (0.4119, ~7.16s), which is where the hero's scrub range now ends.
+      portraitStart: 0, portraitZoom: 1, portraitZones: [0.4119, 0.7366], portraitIntroEnd: 0.1569,
       heroVh: 360, sharpen: 0.7, contrast: 1.05, dim: 0.72, intro: true, introEase: 0.35
     }, opts || {});
     const q = (s, el) => (el || root).querySelector(s);

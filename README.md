@@ -50,8 +50,9 @@ the one the viewport asks for. See "Which film plays" below for the rule and the
 
 ### Source: the landscape film
 
-- `assets/hero-film.mp4` — H.264, **1920×1080** (16:9), **16.3 s**, 391 frames at 24 fps,
-  5,545,328 bytes (~5.54 MB), keyframe every 8 frames, no audio.
+- `assets/hero-film.mp4` — H.264, **1920×1080** (16:9), **16.625 s**, 399 frames at 24 fps
+  (391 content frames plus an 8-frame freeze-hold on the last one, ~0.33 s),
+  5,417,655 bytes (~5.42 MB), keyframe every 8 frames, no audio.
 - `assets/film-poster.jpg` — first-frame still, shown while the video loads.
 - `assets/film-end.jpg` — last frame, the moment the last drop lands, used as the footer's static
   fallback.
@@ -60,8 +61,9 @@ the one the viewport asks for. See "Which film plays" below for the rule and the
 
 ### Source: the portrait film
 
-- `assets/hero-film-portrait.mp4` is H.264, **1072×1920** (9:16), **17.04 s**, 409 frames at 24 fps,
-  4,104,064 bytes (~4.10 MB), keyframe every 8 frames, no audio.
+- `assets/hero-film-portrait.mp4` is H.264, **1072×1920** (9:16), **17.375 s**, 417 frames at 24 fps
+  (409 content frames plus an 8-frame freeze-hold on the last one, ~0.33 s),
+  4,056,359 bytes (~4.06 MB), keyframe every 8 frames, no audio.
 - `assets/film-poster-portrait.jpg` is the first-frame still, shown while the video loads and used as
   the static hero's background on portrait phones and tablets.
 - `assets/film-end-portrait.jpg` is the last frame, the full cup with steam, used as the footer's
@@ -74,7 +76,8 @@ Its content by output time: drops falling from a chrome basket and thickening in
 falling stream against darkness with no cup (2.0 → about 8.0 s); the cup rim creeping in at the very
 bottom edge (from about 8.0 s); the stream clearly pouring into the cup and the level rising (from
 about 12.8 s); the stream stopping and the last drops landing (about 15.5 s); and a still full
-espresso cup on a saucer with steam (15.5 → 17.04 s). It is framed to fill a tall screen, so it needs
+espresso cup on a saucer with steam (15.5 → 17.375 s, the last 0.33 s of which is the 8-frame
+freeze-hold). It is framed to fill a tall screen, so it needs
 none of the top-band fitting the landscape film needs there.
 
 The landscape clip's content over its duration: a drip forming on the underside of a bottomless portafilter
@@ -85,15 +88,17 @@ of output) (~0.227 → ~0.325), the basket sliding out of the top of frame in sl
 0.576), the falling stream alone against darkness (~0.576 → 0.637), an espresso cup rising into frame
 from the bottom (~0.637 → 0.751), the stream landing and the cup filling (~0.751 → 0.894), and the
 last drops with the camera settling onto the full cup (~0.894 → 1.0). The clip ends on the frame where
-the last drop lands. The eased ramp and the basket-exit, stream-alone and cup-entry sections (the ramp easing
+the last drop lands; the shipped file then holds that exact frame for 8 more frames (~0.33 s, encoded
+as near-free duplicate P-frames) so playback settles on a still image rather than stopping mid-motion.
+The eased ramp and the basket-exit, stream-alone and cup-entry sections (the ramp easing
 continuously from 1x to a third speed, the other three slowed three, six and three times) are all
 part of one piecewise time remap applied to the whole clip in a single motion-interpolation pass, so
 there are no joins between them and the fall reads long under scroll; nothing else is time-stretched.
 
 The take ran just under 4 s longer; the tail after the last drop was trimmed because the surface in
 the cup kept rising for several seconds after the pour had visibly stopped, which read as a mistake
-at the very bottom of the page. The kept 16.3 s use the original frames outside the eased ramp and the
-three motion-interpolated sections described above.
+at the very bottom of the page. The kept 16.3 s (391 frames, before the ending hold below) use the
+original frames outside the eased ramp and the three motion-interpolated sections described above.
 
 ### Structure
 
@@ -153,35 +158,40 @@ the answer has not changed.
 Three zones, defined in `filmTime(y)` in `film-engine.js`. The shape is the same for both films; only
 the numbers differ.
 
-**Landscape film** (`assets/hero-film.mp4`, 16.3 s):
+**Landscape film** (`assets/hero-film.mp4`, 16.625 s, including the 8-frame ending hold):
 
 | Zone | Scroll range | Film progress | Seconds | What the viewer sees |
 |---|---|---|---|---|
 | Pour | `0 → zoneA` (end of the 360vh hero) | `start → zones[0]` | 0 → 9.4 | The drip becomes a stream and the basket slides out of the top of frame |
 | Stream | `zoneA → zoneB` (top of the footer, minus 50vh) | `zones[0] → zones[1]` | 9.4 → 11.5 | The falling stream alone, near-held behind the content; the cup rim begins to show at the end |
-| Cup | `zoneB → maxScroll` | `zones[1] → 1.0` | 11.5 → 16.3 | The cup rises into frame, the stream lands, the cup fills and settles |
+| Cup | `zoneB → maxScroll` | `zones[1] → 1.0` | 11.5 → 16.6 | The cup rises into frame, the stream lands, the cup fills and settles |
 
-**Portrait film** (`assets/hero-film-portrait.mp4`, 17.04 s):
+**Portrait film** (`assets/hero-film-portrait.mp4`, 17.375 s, including the 8-frame ending hold):
 
 | Zone | Scroll range | Film progress | Seconds | What the viewer sees |
 |---|---|---|---|---|
 | Pour | `0 → zoneA` (end of the 360vh hero) | `portraitStart → portraitZones[0]` | 0 → 7.16 | Drops fall from the basket and thicken into a continuous stream, the basket leaves the top of frame, and the fall continues |
 | Stream | `zoneA → zoneB` (top of the footer, minus 50vh) | `portraitZones[0] → portraitZones[1]` | 7.16 → 12.8 | The falling stream alone against darkness; the cup rim creeps in at the bottom edge from about 8 s |
-| Cup | `zoneB → maxScroll` | `portraitZones[1] → 1.0` | 12.8 → 17.04 | The stream pours into the cup, the level rises, the last drops land, the full cup settles with steam |
+| Cup | `zoneB → maxScroll` | `portraitZones[1] → 1.0` | 12.8 → 17.38 | The stream pours into the cup, the level rises, the last drops land, the full cup settles with steam |
 
 Current values, passed at init:
 
 ```js
-{ videoSrc: 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5545328,
-  start: 0, zones: [0.576, 0.704], zoom: 1.08, introEnd: 0.343,
+{ videoSrc: 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5417655,
+  start: 0, zones: [0.5645, 0.6899], zoom: 1.08, introEnd: 0.3361,
 
   portraitVideoSrc: 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg',
-  portraitVideoBytes: 4104064,
-  portraitStart: 0, portraitZones: [0.42, 0.751], portraitZoom: 1, portraitIntroEnd: 0.16,
+  portraitVideoBytes: 4056359,
+  portraitStart: 0, portraitZones: [0.4119, 0.7366], portraitZoom: 1, portraitIntroEnd: 0.1569,
 
   heroVh: 360, sharpen: 0.7, contrast: 1.05, dim: 0.72,
   intro: true, introEase: 0.35 }
 ```
+
+Every zone/introEnd value above is `old × (old_frames / new_frames)` off the pre-hold source (391 and
+409 frames respectively), rescaled to the shipped 399- and 417-frame files so the same content beats
+land at the same fraction of the new, slightly longer duration. Re-derive them the same way if either
+film's frame count ever changes again.
 
 New engine options and their defaults, all of them the portrait half of an existing landscape option:
 
@@ -189,10 +199,10 @@ New engine options and their defaults, all of them the portrait half of an exist
 |---|---|---|
 | `portraitVideoSrc` | `'assets/hero-film-portrait.mp4'` | The portrait film. Falsy disables the swap entirely and the landscape film plays everywhere |
 | `portraitPosterSrc` | `'assets/film-poster-portrait.jpg'` | Painted on the poster layer while the portrait film loads |
-| `portraitVideoBytes` | `4104064` | Fallback total for the progress ring when the response has no `Content-Length` |
-| `portraitZones` | `[0.42, 0.751]` | Pour end and stream end, as a fraction of the portrait film |
+| `portraitVideoBytes` | `4056359` | Fallback total for the progress ring when the response has no `Content-Length` |
+| `portraitZones` | `[0.4119, 0.7366]` | Pour end and stream end, as a fraction of the portrait film |
 | `portraitStart` | `0` | Where the mapping begins, as a fraction of the portrait film |
-| `portraitIntroEnd` | `0.16` | Where the intro hands the playhead to scroll, as a fraction of the portrait film |
+| `portraitIntroEnd` | `0.1569` | Where the intro hands the playhead to scroll, as a fraction of the portrait film |
 | `portraitZoom` | `1` | UV pull-back for the portrait film. 1.0, because it already fills a tall screen |
 
 `start: 0` is deliberate for both clips: the poster is the first frame and there is movement from
@@ -205,10 +215,10 @@ many frames the content scroll has to move through.
 `filmTime` holds each zone end at or after the one before it. That matters because the intro can hand
 the playhead over past the pour mark if `introEnd` is set beyond `zones[0]`, and the scrub must only
 ever run forwards. Keep an `introEnd` below its film's `zones[0]` anyway, or the hero has nothing left
-to scrub through. `portraitIntroEnd: 0.16` (~2.73 s) lands safely past the drip becoming a continuous
-stream at ~2.0 s and stays comfortably below `portraitZones[0]` (`0.42`, ~7.16 s), so the intro always
+to scrub through. `portraitIntroEnd: 0.1569` (~2.73 s) lands safely past the drip becoming a continuous
+stream at ~2.0 s and stays comfortably below `portraitZones[0]` (`0.4119`, ~7.16 s), so the intro always
 hands off inside footage the hero still has left to scrub. `portraitZones[0]` was widened from `0.117`
-to `0.29` and later to `0.42` for the same reason from the other direction: at `0.117` the hero's whole scroll runway
+to `0.29` and later to `0.4119` for the same reason from the other direction: at `0.117` the hero's whole scroll runway
 mapped to just the first 2.0 s of film, cutting the intro's hand-off point off before the drip had
 even become a stream.
 
@@ -238,7 +248,7 @@ produces visible stalls. Instead:
 
 The film plays itself once on load. As soon as the blob is attached and the video is ready, and only
 if the visitor has not scrolled yet (`scrollY` under 40px) and reduced motion is off, the video plays
-forward in real time from `start` to a new option `introEnd` (0.343 of the duration, about 5.6s):
+forward in real time from `start` to a new option `introEnd` (0.3361 of the duration, about 5.6s):
 the drip stretching into a pouring stream, the camera tilting down through the eased slowdown baked
 into the footage, and on through a short beat of the basket sliding out of frame before it stops.
 Frames are painted into the WebGL canvas from `video.requestVideoFrameCallback` where it exists, and
@@ -286,9 +296,9 @@ Whichever film is loaded runs its own intro against its own numbers: the intro s
 start and stops at that film's intro end, and the hand-off writes a progress on that film's timeline.
 
 The prototype exposes all three as editor props in the Film section: `intro` (boolean, default true),
-`introEnd` (range, default 0.343, 0 to 0.6, step 0.005) and `introEase` (range, default 0.35 s, 0 to 4,
+`introEnd` (range, default 0.3361, 0 to 0.6, step 0.005) and `introEase` (range, default 0.35 s, 0 to 4,
 step 0.1; 0 restores the hard stop). `intro` and `introEase` are shared. The portrait film gets its own
-`portraitIntroEnd` (range, default 0.16, 0 to 0.6, step 0.005) alongside `portraitVideoSrc` (text),
+`portraitIntroEnd` (range, default 0.1569, 0 to 0.6, step 0.005) alongside `portraitVideoSrc` (text),
 `portraitStart` (range, default 0) and `portraitZoom` (range, default 1). Both films' zones stay
 hardcoded at init rather than exposed, which is how the landscape zones have always been handled.
 
@@ -904,11 +914,11 @@ and from the vignette. The header's only shadow is a 1px hairline.
 
 | File | Origin | Notes |
 |---|---|---|
-| `assets/hero-film.mp4` | AI-generated on Higgsfield (Kling 3.0 pro, image-to-video from an approved Nano Banana Pro still), an eased ramp and the stream section motion-interpolated, then re-encoded for scrubbing (x264 crf 21, keyframe every 8 frames, faststart) and trimmed to end on the last drop | 1920×1080, 16.3s, 5,545,328 bytes, silent |
+| `assets/hero-film.mp4` | AI-generated on Higgsfield (Kling 3.0 pro, image-to-video from an approved Nano Banana Pro still), an eased ramp and the stream section motion-interpolated, then re-encoded for scrubbing (x264 crf 21, keyframe every 8 frames, faststart), trimmed to end on the last drop, and extended with an 8-frame freeze-hold on that final frame (~0.33s) so playback settles on a still image | 1920×1080, 16.625s, 399 frames at 24fps, 5,417,655 bytes, silent |
 | `assets/film-poster.jpg` | Frame 0 of the above | Pre-load poster, the film's approved opening still, and the static hero's background |
 | `assets/film-end.jpg` | Final frame of the above, the moment the last drop lands | Footer static fallback |
 | `assets/film-still.jpg` | Frame at 12.3s (stream landing in the cup) | Approved still, no longer referenced by the page |
-| `assets/hero-film-portrait.mp4` | The portrait cut of the same pour, generated and encoded the same way | 1072×1920, 17.04s, 409 frames at 24fps, 4,104,064 bytes, keyframe every 8 frames, silent |
+| `assets/hero-film-portrait.mp4` | The portrait cut of the same pour, generated and encoded the same way (x264 crf 22), same 8-frame freeze-hold on the final frame | 1072×1920, 17.375s, 417 frames at 24fps, 4,056,359 bytes, keyframe every 8 frames, silent |
 | `assets/film-poster-portrait.jpg` | Frame 0 of the portrait film | Pre-load poster and the static hero's background on portrait phones and tablets |
 | `assets/film-end-portrait.jpg` | Final frame of the portrait film, the full cup with steam | Footer static fallback on portrait phones and tablets |
 | `assets/film-still-portrait.jpg` | Frame at 6.0s of the portrait film | Approved still, no longer referenced by the page |
