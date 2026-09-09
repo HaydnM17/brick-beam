@@ -711,6 +711,12 @@
        snap is exactly the visible jump watched for. The lightbox itself always reads/returns focus to the
        real (non-hidden, tabbable) original for that index, since focusing an aria-hidden clone would be an
        accessibility bug even though it is visually identical. */
+    // Hover-to-steer: shared across both carousels below. matchMedia + pointerType together, per
+    // the brief, since a hybrid touchscreen laptop can report hover:hover at the OS level while the
+    // actual pointer event driving a given move is still a finger. lbEl is the same shared dialog
+    // openLightbox above already points at; steering must go quiet while it's open.
+    const HOVER_MQ = matchMedia('(hover: hover) and (pointer: fine)');
+    const lbEl = q('[data-bb="lightbox"]');
     qa('[data-bb="car"]').forEach(strip => {
       const view = q('.bb-car-view', strip), track = q('.bb-car-track', strip);
       const prevBtn = q('.bb-car-prev', strip), nextBtn = q('.bb-car-next', strip);
@@ -738,6 +744,31 @@
 
       let pos = null;
       const DRIFT = 40; // px/s - faster and the depth scaling reads as a glitch, not a glide
+
+      // Hover-to-steer: point at either end and the drift leans that way, harder the closer to the
+      // true edge, on top of (never instead of) the constant idle drift. steerVel is the pointer's
+      // current target speed (null = neutral, no steering); vel is what frameCar actually applies,
+      // eased toward whichever target is live so a zone crossing reads as a lean, not a snap. Speeds
+      // are signed in view.scrollLeft terms - "left" is always negative, "right" always positive -
+      // deliberately independent of DRIFT's own sign, so the left zone still reverses correctly even
+      // if some future carousel's DRIFT ever ran the other way.
+      const BASE_SPEED = Math.abs(DRIFT);
+      const STEER_ZONE = 0.3;   // outer 30% of the view's width at each end
+      const STEER_PEAK = 2.3;   // top speed while hovering right at the true edge, as a multiple of DRIFT
+      const STEER_TAU = 0.09;   // seconds - exponential ease constant, ~90-95% there by 250-300ms
+      let vel = DRIFT, steerVel = null, viewRect = null;
+      const refreshCarRect = () => { viewRect = view.getBoundingClientRect(); };
+      function steerVelFor(nx) {
+        if (nx < STEER_ZONE) {
+          const t = Math.min(1, (STEER_ZONE - nx) / STEER_ZONE);
+          return -BASE_SPEED * (1 + (STEER_PEAK - 1) * t);
+        }
+        if (nx > 1 - STEER_ZONE) {
+          const t = Math.min(1, (nx - (1 - STEER_ZONE)) / STEER_ZONE);
+          return BASE_SPEED * (1 + (STEER_PEAK - 1) * t);
+        }
+        return null; // neutral middle - defer to the base drift
+      }
 
       function wrap() {
         if (setWidth <= 0) return;
@@ -782,7 +813,11 @@
         const dt = Math.min((now - carLast) / 1000, 0.05); // caps the jump after a backgrounded tab
         carLast = now;
         if (pos === null) pos = view.scrollLeft;
-        pos += DRIFT * dt;
+        // held.press (an active drag) always wins over steering, same as it wins over everything else -
+        // no steer target lingers into a drag just because the pointer hasn't left the zone.
+        const targetVel = (steerVel === null || held.press) ? DRIFT : steerVel;
+        vel += (targetVel - vel) * Math.min(1, dt / STEER_TAU);
+        pos += vel * dt;
         wrap(); paintCar();
         carRaf = requestAnimationFrame(frameCar);
       }
@@ -834,6 +869,24 @@
         if (Math.abs(e.clientX - downX) > DRAG_PX || Math.abs(e.clientY - downY) > DRAG_PX) dragged = true;
       }, { passive: true });
       on(window, 'pointerup', () => { pressed = false; holdReason('press', false); }, { passive: true });
+      // Steering itself: a real mouse only (pointerType, backed by the hover/pointer media query - a
+      // touch drag on a hybrid device must never trigger this), gated off while the lightbox sits on
+      // top of the page and quietly inert whenever frameCar isn't reading it (reduced motion, off-
+      // screen, a held press) rather than trying to duplicate those checks here. No layout read on
+      // every move: viewRect is cached on entry and refreshed on resize/scroll, never in this handler.
+      on(view, 'pointerenter', e => {
+        if (e.pointerType !== 'mouse' || !HOVER_MQ.matches) return;
+        refreshCarRect();
+      });
+      on(view, 'pointermove', e => {
+        if (reduced() || e.pointerType !== 'mouse' || !HOVER_MQ.matches) { steerVel = null; return; }
+        if (lbEl && !lbEl.hidden) { steerVel = null; return; }
+        if (!viewRect || !viewRect.width) { steerVel = null; return; }
+        steerVel = steerVelFor((e.clientX - viewRect.left) / viewRect.width);
+      }, { passive: true });
+      on(view, 'pointerleave', () => { steerVel = null; });
+      on(window, 'resize', refreshCarRect);
+      on(window, 'scroll', refreshCarRect, { passive: true });
       on(track, 'click', e => {
         if (dragged) return;                                                  // that release was a swipe, not a tap
         const cell = e.target.closest('.bb-car-cell');
