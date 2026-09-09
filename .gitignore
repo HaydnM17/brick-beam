@@ -14,3 +14,6 @@ edgeprof*/
 *.bak
 _*/
 _*.json
+
+# User's own preview screenshots, not part of the shipped site
+Mockup Preview Screenshots/

@@ -190,12 +190,22 @@ input,textarea,button{font:inherit}
    arrows already use to clear their own buttons of the header) = 62px of headroom.
    Hero sits at document position 0, so it needs a NEGATIVE margin -- 0 minus a positive
    number is what actually pushes the landing scroll position down off zero.
-   The footer's inner band is position:sticky;top:0 inside its own tall scroll track, so it
-   must NOT be scrolled past: doing so snaps the sticky band straight to the very top, under
-   the header, which is the opposite of clear. A small POSITIVE margin lands just above that
-   footer's own top edge instead, before the sticky behaviour engages. */
+   The footer is the one stop deliberately NOT on the 117px-from-top convention: it is the
+   last stop on the page, and the client asked for it to land at the very bottom of the
+   document, not just clear of the header. A large negative margin does that: anchorTop()
+   in film-engine.js computes el.getBoundingClientRect().top + scrollY - scrollMarginTop, so
+   a big enough negative value pushes that number past the maximum possible scroll position,
+   and stops() already clamps every stop with Math.min(anchorTop(sec), max) -- the browser's
+   own fragment-navigation clamps the same way -- so the result is exactly the document's true
+   maximum scrollY, not a guess at it. -300vh overshoots at any viewport height (the footer's
+   own track is a fixed 240vh, so anything past roughly -140vh already clears it) and needs no
+   phone-specific override the way the header-driven hero margin below still does.
+   The footer's inner band is position:sticky;top:0 inside a 240vh track that is otherwise
+   empty beneath it, so scrolling all the way to the bottom is exactly what unsticks it and
+   lets it ride down to meet the document's true bottom edge -- the band ends up filling the
+   viewport there rather than being cut off or caught under the header. */
 [data-bb="hero"],[data-bb="static-hero"]{scroll-margin-top:-62px}
-[data-bb="end"]{scroll-margin-top:62px}
+[data-bb="end"]{scroll-margin-top:-300vh}
 /* ---------- Phones and small screens ---------- */
 a,button{-webkit-tap-highlight-color:transparent}
 /* Phone header: the wordmark keeps its own row, the four section links sit on a scrolling rail under it.
@@ -221,10 +231,11 @@ a,button{-webkit-tap-highlight-color:transparent}
   #club{scroll-margin-top:37px}
   #reviews{scroll-margin-top:29px}
   #find{scroll-margin-top:29px}
-  /* Hero/footer arrow stops at this breakpoint: header is 96px tall here (two-row phone
-     header), so 96+14 = 110px of headroom. Same reasoning as the base rule above. */
+  /* Hero arrow stop at this breakpoint: header is 96px tall here (two-row phone header),
+     so 96+14 = 110px of headroom. Same reasoning as the base rule above. The footer's own
+     -300vh margin (base rule above) already overshoots at any viewport height, so it needs
+     no phone-specific value here. */
   [data-bb="hero"],[data-bb="static-hero"]{scroll-margin-top:-110px}
-  [data-bb="end"]{scroll-margin-top:110px}
 }
 /* A fixed 100vh stage fights the iOS toolbar; svh keeps the bottom of a band on screen. */
 @media (max-width:900px){
