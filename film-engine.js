@@ -754,7 +754,7 @@
       // if some future carousel's DRIFT ever ran the other way.
       const BASE_SPEED = Math.abs(DRIFT);
       const STEER_ZONE = 0.3;   // outer 30% of the view's width at each end
-      const STEER_PEAK = 2.3;   // top speed while hovering right at the true edge, as a multiple of DRIFT
+      const STEER_PEAK = 3.5;   // top speed while hovering right at the true edge, as a multiple of DRIFT
       const STEER_TAU = 0.09;   // seconds - exponential ease constant, ~90-95% there by 250-300ms
       let vel = DRIFT, steerVel = null, viewRect = null;
       const refreshCarRect = () => { viewRect = view.getBoundingClientRect(); };
