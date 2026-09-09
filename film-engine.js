@@ -932,13 +932,19 @@
    Stops: every direct child <section> of #main, plus the footer's own cup
    film, count as a step — that list is exactly "The sections, in page
    order" this was briefed against, hero and footer included. The hero
-   counts as a step like any other: its own stop sits at the very top of the
-   document, so the down arrow's target the moment it first appears — as
-   soon as the visitor has scrolled past the "Scroll to pour" cue, see
-   cueShowing below — is still Shop, the whole rest of the 360vh pour in one
-   press. The pour is skippable, not mandatory — a genuine fast path for a
-   visitor who came back for the menu, not the film, and a quieter way to
-   skip scroll-jacking than none at all. A hidden section
+   counts as a step like any other: anchorTop below reads its
+   scroll-margin-top the same as it does for every other stop (see the
+   stylesheet), which keeps the hero's own stop just clear of the header
+   rather than pinned to literal position 0. In practice the down arrow's
+   target the moment it first appears — as soon as the visitor has scrolled
+   past the "Scroll to pour" cue, see cueShowing below — is still Shop, the
+   whole rest of the 360vh pour in one press: the cue-hide threshold sits
+   further into the scroll than the hero's own stop, so by the time a real
+   scroll gesture gets the arrow to appear, that stop is already behind the
+   visitor and beyond() skips straight past it. The pour is skippable, not
+   mandatory — a genuine fast path for a visitor who came back for the
+   menu, not the film, and a quieter way to skip scroll-jacking than none
+   at all. A hidden section
    (offsetHeight 0 — <section data-bb="static-hero"> normally, or the film
    hero itself under reduced motion or short-landscape mode, where the CSS
    swaps which of the two is shown) drops out of the stop list on its own,
@@ -970,8 +976,15 @@
     return header ? header.offsetHeight : 0;
   };
 
+  // Reads the same scroll-margin-top the browser itself honours for ordinary anchor
+  // navigation (nav links, location.hash), so the arrows land on exactly the spot the
+  // CSS was tuned for instead of a second, independently-computed guess. Every stop
+  // SECTION_SELECTOR can land on carries an explicit scroll-margin-top for this reason
+  // (see the hero/static-hero/footer rules in the stylesheet) -- there is no "0 means
+  // unset" fallback here, because a genuinely-tuned 0 would be indistinguishable from one.
   var anchorTop = function (el) {
-    return Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerOffset());
+    var sm = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    return Math.max(0, el.getBoundingClientRect().top + window.scrollY - sm);
   };
 
   // Every stop on the page, measured on demand rather than cached, so a stop is never stale

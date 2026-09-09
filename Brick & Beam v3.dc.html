@@ -183,6 +183,19 @@ input,textarea,button{font:inherit}
 #club{scroll-margin-top:11px}
 #reviews{scroll-margin-top:-52px}
 #find{scroll-margin-top:-24px}
+/* The jump arrows (film-engine.js) stop at every #main > section plus the footer, which
+   includes the hero and, on a page with no nav link of its own, the footer -- not just the
+   six sections above. Every stop needs an explicit value or an untuned one reads as 0 and
+   lands flush under the fixed header. Header is 48px tall here, so 48+14 (the same GAP the
+   arrows already use to clear their own buttons of the header) = 62px of headroom.
+   Hero sits at document position 0, so it needs a NEGATIVE margin -- 0 minus a positive
+   number is what actually pushes the landing scroll position down off zero.
+   The footer's inner band is position:sticky;top:0 inside its own tall scroll track, so it
+   must NOT be scrolled past: doing so snaps the sticky band straight to the very top, under
+   the header, which is the opposite of clear. A small POSITIVE margin lands just above that
+   footer's own top edge instead, before the sticky behaviour engages. */
+[data-bb="hero"],[data-bb="static-hero"]{scroll-margin-top:-62px}
+[data-bb="end"]{scroll-margin-top:62px}
 /* ---------- Phones and small screens ---------- */
 a,button{-webkit-tap-highlight-color:transparent}
 /* Phone header: the wordmark keeps its own row, the four section links sit on a scrolling rail under it.
@@ -208,6 +221,10 @@ a,button{-webkit-tap-highlight-color:transparent}
   #club{scroll-margin-top:-82px}
   #reviews{scroll-margin-top:-13px}
   #find{scroll-margin-top:29px}
+  /* Hero/footer arrow stops at this breakpoint: header is 96px tall here (two-row phone
+     header), so 96+14 = 110px of headroom. Same reasoning as the base rule above. */
+  [data-bb="hero"],[data-bb="static-hero"]{scroll-margin-top:-110px}
+  [data-bb="end"]{scroll-margin-top:110px}
 }
 /* A fixed 100vh stage fights the iOS toolbar; svh keeps the bottom of a band on screen. */
 @media (max-width:900px){
