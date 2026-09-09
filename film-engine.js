@@ -868,7 +868,14 @@
         if (performance.now() - downT > DRAG_MS) return;
         if (Math.abs(e.clientX - downX) > DRAG_PX || Math.abs(e.clientY - downY) > DRAG_PX) dragged = true;
       }, { passive: true });
-      on(window, 'pointerup', () => { pressed = false; holdReason('press', false); }, { passive: true });
+      // pointerup ends a completed gesture (tap or drag-release); pointercancel ends one the browser
+      // hijacked instead - on a real phone Chromium fires this, not pointerup, the moment a touch
+      // becomes a native scroll, so without it 'press' would stick forever after the first swipe and
+      // the drift would never restart. Both clear the same hold; cancel also forces dragged so a
+      // click firing off the back of a hijacked gesture still can't be mistaken for a tap.
+      const endPress = () => { pressed = false; holdReason('press', false); };
+      on(window, 'pointerup', endPress, { passive: true });
+      on(window, 'pointercancel', () => { dragged = true; endPress(); }, { passive: true });
       // Steering itself: a real mouse only (pointerType, backed by the hover/pointer media query - a
       // touch drag on a hybrid device must never trigger this), gated off while the lightbox sits on
       // top of the page and quietly inert whenever frameCar isn't reading it (reduced motion, off-
@@ -898,7 +905,12 @@
         if (openLightbox) { const orig = originals[idx], img = orig && q('img', orig); if (img) openLightbox(img, orig); }
       });
       on(view, 'scroll', paintCar, { passive: true });
-      on(document, 'visibilitychange', () => holdReason('hidden', document.hidden));
+      on(document, 'visibilitychange', () => {
+        holdReason('hidden', document.hidden);
+        // Backgrounding mid-gesture doesn't reliably deliver pointerup/pointercancel on every
+        // platform; treat leaving the page as ending the gesture so 'press' can't strand it either.
+        if (document.hidden && pressed) endPress();
+      });
 
       function settleCar() {
         if (reduced()) {
