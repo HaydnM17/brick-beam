@@ -168,6 +168,14 @@ input,textarea,button{font:inherit}
 @media (max-height:560px){[data-bb="cue"]{display:none!important}}
 @media (max-width:900px){[data-bb="hold-col"]{position:static!important}}
 @media (pointer:coarse){.bb-btn{min-height:48px}}
+/* Per-section landing offsets, base (>760px): same idea as the phone override below, values
+   measured at 1280px where pour's badge sits beside its heading instead of stacking above it. */
+#shop{scroll-margin-top:-36px}
+#pour{scroll-margin-top:-23px}
+#room{scroll-margin-top:-36px}
+#club{scroll-margin-top:11px}
+#reviews{scroll-margin-top:-52px}
+#find{scroll-margin-top:-24px}
 /* ---------- Phones and small screens ---------- */
 a,button{-webkit-tap-highlight-color:transparent}
 /* Phone header: the wordmark keeps its own row, the four section links sit on a scrolling rail under it.
@@ -181,7 +189,18 @@ a,button{-webkit-tap-highlight-color:transparent}
   [data-bb="header"] nav>a{flex:none;display:inline-flex;align-items:center;min-height:48px;padding-right:22px;font-size:11px!important;letter-spacing:0.14em!important;white-space:nowrap;text-shadow:0 1px 2px rgba(6,4,3,.95),0 3px 12px rgba(6,4,3,.78)}
   [data-bb="header"] nav>a:last-child{padding-right:8px}
   .bb-nav-lg{display:none}
-  #main,#shop,#pour,#room,#club,#reviews,#find{scroll-margin-top:104px}
+  #main{scroll-margin-top:104px}
+  /* Per-section landing offsets, phone: each section's heading sits a different distance below its
+     own top edge (pour's badge column and club's time badge stack above their headings here), so a
+     single shared offset landed some headings far too low. scroll-margin-top = 160 (target landing
+     depth) minus that section's measured heading-below-top gap at 390px; negative is correct where
+     the gap already exceeds 160. */
+  #shop{scroll-margin-top:21px}
+  #pour{scroll-margin-top:-248px}
+  #room{scroll-margin-top:22px}
+  #club{scroll-margin-top:-82px}
+  #reviews{scroll-margin-top:-13px}
+  #find{scroll-margin-top:29px}
 }
 /* A fixed 100vh stage fights the iOS toolbar; svh keeps the bottom of a band on screen. */
 @media (max-width:900px){
