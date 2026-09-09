@@ -956,6 +956,18 @@
    viewport-bottom band for that whole stretch — simplest way to guarantee
    the two never share the screen. */
 (function () {
+  // Guards against this whole IIFE running more than once: the page's DC-template runtime
+  // discards its first render pass and re-renders, which recreates the <script src="film-engine.js">
+  // element itself, not just the elements the script reads. That reruns every top-level statement
+  // here a second time, so without this the document.addEventListener('click', ...) below ends up
+  // registered twice - two listeners, each calling step() once, doubling every scroll-computation
+  // per physical click. Confirmed via document.__proto__'s DevTools getEventListeners(document).click,
+  // which showed two identical handler closures before this guard was added. window survives the
+  // re-render (only the DOM content is discarded), so a flag on it is the one thing that can tell the
+  // second pass it has already run.
+  if (window.__bbJumpArrowsBound) return;
+  window.__bbJumpArrowsBound = true;
+
   var SECTION_SELECTOR = '#main > section, [data-bb="end"]';
   var GAP = 14; // breathing room below the fixed header, in px
 
