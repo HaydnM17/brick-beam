@@ -5,3 +5,10 @@ Thumbs.db
 desktop.ini
 .DS_Store
 *.tmp
+
+# Capture harnesses and headless Edge profiles (agents create these; never ship them)
+_*.html
+_*.txt
+_*.png
+edgeprof*/
+*.bak

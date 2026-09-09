@@ -170,7 +170,7 @@ the numbers differ.
 
 | Zone | Scroll range | Film progress | Seconds | What the viewer sees |
 |---|---|---|---|---|
-| Pour | `0 → zoneA` (end of the 360vh hero) | `portraitStart → portraitZones[0]` | 0 → 7.16 | Drops fall from the basket and thicken into a continuous stream, the basket leaves the top of frame, and the fall continues |
+| Pour | `0 → zoneA` (end of the 260vh portrait hero) | `portraitStart → portraitZones[0]` | 0 → 7.16 | Drops fall from the basket and thicken into a continuous stream, the basket leaves the top of frame, and the fall continues |
 | Stream | `zoneA → zoneB` (top of the footer, minus 50vh) | `portraitZones[0] → portraitZones[1]` | 7.16 → 12.8 | The falling stream alone against darkness; the cup rim creeps in at the bottom edge from about 8 s |
 | Cup | `zoneB → maxScroll` | `portraitZones[1] → 1.0` | 12.8 → 17.38 | The stream pours into the cup, the level rises, the last drops land, the full cup settles with steam |
 
@@ -184,7 +184,7 @@ Current values, passed at init:
   portraitVideoBytes: 4056359,
   portraitStart: 0, portraitZones: [0.4119, 0.7366], portraitZoom: 1, portraitIntroEnd: 0.1569,
 
-  heroVh: 360, sharpen: 0.7, contrast: 1.05, dim: 0.72,
+  heroVh: 360, portraitHeroVh: 260, sharpen: 0.7, contrast: 1.05, dim: 0.72,
   intro: true, introEase: 0.35 }
 ```
 
@@ -204,6 +204,7 @@ New engine options and their defaults, all of them the portrait half of an exist
 | `portraitStart` | `0` | Where the mapping begins, as a fraction of the portrait film |
 | `portraitIntroEnd` | `0.1569` | Where the intro hands the playhead to scroll, as a fraction of the portrait film |
 | `portraitZoom` | `1` | UV pull-back for the portrait film. 1.0, because it already fills a tall screen |
+| `portraitHeroVh` | `260` | The hero's own height on a portrait viewport, picked the same way as `portraitZones`/`portraitIntroEnd` above (through `filmIsPortrait`, re-applied in `swapFilm()` on an orientation flip, with `measure()` re-run after so `heroRange`/`zoneA`/`zoneB` never lag the new height). `heroVh: 360` is landscape-only now; a phone at 390px wide gets roughly 1203px of hero scroll instead of 1955px |
 
 `start: 0` is deliberate for both clips: the poster is the first frame and there is movement from
 frame one, so the film responds to the visitor's first scroll with no dead stretch.

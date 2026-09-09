@@ -159,7 +159,10 @@
       // 0.1569 (~2.73s) lands safely past the drip becoming a continuous stream (~2.0s) and stays below
       // portraitZones[0] (0.4119, ~7.16s), which is where the hero's scrub range now ends.
       portraitStart: 0, portraitZoom: 1, portraitZones: [0.4119, 0.7366], portraitIntroEnd: 0.1569,
-      heroVh: 360, sharpen: 0.7, contrast: 1.05, dim: 0.72, intro: true, introEase: 0.35
+      // The portrait hero is shorter than the landscape one (360vh): on a phone the same vh count means far
+      // more physical scrolling, so portraitHeroVh trims it independently. Picked up the same way as
+      // portraitZones/portraitIntroEnd above, through filmIsPortrait.
+      heroVh: 360, portraitHeroVh: 260, sharpen: 0.7, contrast: 1.05, dim: 0.72, intro: true, introEase: 0.35
     }, opts || {});
     const q = (s, el) => (el || root).querySelector(s);
     const qa = (s, el) => Array.from((el || root).querySelectorAll(s));
@@ -178,7 +181,6 @@
     /* ---------------- The film ---------------- */
     const film = q('[data-bb="film"]'), video = q('[data-bb="video"]'), canvas = q('[data-bb="canvas"]'), poster = q('[data-bb="poster"]'), dimEl = q('[data-bb="dim"]');
     const hero = q('[data-bb="hero"]'), end = q('[data-bb="end"]'), cue = q('[data-bb="cue"]'), ring = q('[data-bb="ring"]'), header = q('[data-bb="header"]');
-    if (hero && opts.heroVh) hero.style.height = opts.heroVh + 'vh';
     if (video) { video.muted = true; video.playsInline = true; video.preload = 'none'; video.removeAttribute('controls'); }
 
     /* ---------------- Two films, one code path ----------------
@@ -196,6 +198,7 @@
     const startNow    = () => clamp(Number(filmIsPortrait ? opts.portraitStart : opts.start) || 0, 0, 1);
     const introEndNow = () => clamp(Number(filmIsPortrait ? opts.portraitIntroEnd : opts.introEnd) || 0, 0, 1);
     const zoomNow     = () => Number(filmIsPortrait ? opts.portraitZoom : opts.zoom) || 1;
+    const heroVhNow   = () => Number(filmIsPortrait ? opts.portraitHeroVh : opts.heroVh) || opts.heroVh;
     // The top band is only ever the landscape film's way of covering a tall screen. The portrait film fills it.
     const bandFit     = () => !filmIsPortrait && innerHeight > innerWidth;
     // The page's CSS keys the same decision off these classes: the band framing, the band-fade element and
@@ -205,6 +208,9 @@
       root.classList.toggle('bb-film-landscape', !filmIsPortrait);
     }
     markFilmClass();
+    // Set once here for the initial orientation, and again in swapFilm() whenever filmIsPortrait flips, so
+    // heroRange/zoneA (computed in measure(), below) are never derived from the wrong orientation's height.
+    if (hero) hero.style.height = heroVhNow() + 'vh';
 
     const collect = stage => stage ? qa('.bb-band', stage).map(el => {
       const r = (el.dataset.band || '0,1').split(',').map(Number);
@@ -487,6 +493,9 @@
       teardownFilm();
       filmIsPortrait = usePortrait;
       markFilmClass();
+      // The hero's own height flips with orientation too (portraitHeroVh vs heroVh); it must land before
+      // measure() below re-derives heroRange/zoneA, or the scrub stays sized for the film that just left.
+      if (hero) hero.style.height = heroVhNow() + 'vh';
       // liveStart is a progress on the film that has just left. Re-home it inside the new film's hand-off
       // range so the scrub picks up at the equivalent frame instead of a number from the other timeline.
       if (liveStart !== null) liveStart = clamp(liveStart, startNow(), introEndNow());
@@ -615,6 +624,144 @@
     qa('[data-living]').forEach(el => {
       const io = new IntersectionObserver(es => es.forEach(e => el.classList.toggle('bb-off', !e.isIntersecting)));
       io.observe(el); cleanups.push(() => io.disconnect());
+    });
+
+    /* ---------------- Depth-drift photo carousels (#pour, #room) ----------------
+       One scroll position per carousel drives everything: an rAF loop advances it for the idle drift,
+       and a trackpad swipe, a touch drag, an arrow-key press and the prev/next buttons all move the same
+       number through the same code path (view.scrollLeft). Every cell repaints its own scale/opacity, every
+       frame, as a pure function of its own distance from that number - there is no separate slide index.
+       Off-screen pausing reuses the same IntersectionObserver shape as the [data-living] loop just above,
+       just gating a JS rAF loop instead of a CSS animation (bb-off only pauses animation-play-state, which
+       a scrollLeft-driven loop ignores). Full writeup: the depth-drift-carousel skill. */
+    qa('[data-bb="car"]').forEach(strip => {
+      const view = q('.bb-car-view', strip), track = q('.bb-car-track', strip);
+      const prevBtn = q('.bb-car-prev', strip), nextBtn = q('.bb-car-next', strip);
+      if (!view || !track || !prevBtn || !nextBtn) return;
+      const originals = Array.from(track.children);
+      if (originals.length < 2) return;
+
+      // Three sets total (original + 2 clones): the live position needs a whole set of cells on both
+      // sides of it at all times, or the wrap-back moment briefly shows nothing to one side.
+      for (let c = 0; c < 2; c++) {
+        originals.forEach(cell => {
+          const copy = cell.cloneNode(true);
+          copy.setAttribute('aria-hidden', 'true');
+          copy.tabIndex = -1;
+          // normalise() below starts the view inside the first clone set (the middle of three), so
+          // that set - not the originals - is what's actually on screen at first paint.
+          if (c === 0) qa('img', copy).forEach(img => { img.loading = 'eager'; });
+          track.appendChild(copy);
+        });
+      }
+      const cells = Array.from(track.children);
+      const activeCells = () => reduced() ? originals : cells; // reduced motion hides the clones (CSS); ignore them here too
+      let setWidth = 0;
+      const measureSet = () => { setWidth = cells[originals.length].offsetLeft - cells[0].offsetLeft; };
+
+      let pos = null;
+      const DRIFT = 40; // px/s - faster and the depth scaling reads as a glitch, not a glide
+
+      function wrap() {
+        if (setWidth <= 0) return;
+        if (pos === null) pos = view.scrollLeft;
+        if (pos >= setWidth * 2) pos -= setWidth;
+        else if (pos < setWidth) pos += setWidth;
+        view.scrollLeft = pos;
+      }
+      function normalise() {
+        if (setWidth <= 0) return;
+        const p = pos === null ? view.scrollLeft : pos;
+        pos = setWidth + (((p % setWidth) + setWidth) % setWidth);
+        view.scrollLeft = pos;
+      }
+      function paintCar() {
+        if (reduced()) return;
+        const mid = view.scrollLeft + view.clientWidth / 2, span = view.clientWidth;
+        if (!span) return;
+        cells.forEach(cell => {
+          const off = cell.offsetLeft + cell.offsetWidth / 2 - mid;
+          const d = Math.abs(off) / span;
+          const scale = Math.max(0.84, 1 - d * 0.38);
+          const fade = Math.max(0.38, 1 - d * 1.5);
+          const t = Math.max(-1, Math.min(1, off / (span * 0.5)));
+          cell.style.transformOrigin = (50 - t * 50).toFixed(1) + '% 50%';
+          cell.style.transform = 'scale(' + scale.toFixed(3) + ')';
+          cell.style.opacity = fade.toFixed(3);
+          cell.classList.toggle('is-focus', d < 0.14);
+        });
+      }
+
+      // Independent pause reasons: hover, a pointer held down, the tab hidden, and the strip off-screen.
+      // Only the aggregate's edge (true<->false) should start or stop the rAF loop.
+      const held = { hover: false, press: false, hidden: document.hidden, off: true, step: false };
+      let carRunning = false, carLast = 0, carRaf = null;
+      function frameCar(now) {
+        if (!carRunning) return;
+        const dt = Math.min((now - carLast) / 1000, 0.05); // caps the jump after a backgrounded tab
+        carLast = now;
+        if (pos === null) pos = view.scrollLeft;
+        pos += DRIFT * dt;
+        wrap(); paintCar();
+        carRaf = requestAnimationFrame(frameCar);
+      }
+      function syncCar() {
+        const should = !reduced() && !held.hover && !held.press && !held.hidden && !held.off && !held.step;
+        if (should === carRunning) return;
+        carRunning = should;
+        if (carRunning) { carLast = performance.now(); pos = null; carRaf = requestAnimationFrame(frameCar); }
+        else if (carRaf !== null) { cancelAnimationFrame(carRaf); carRaf = null; }
+      }
+      const holdReason = (key, on) => { held[key] = on; syncCar(); };
+
+      let stepTimer = 0;
+      function goTo(target) {
+        if (!target) return;
+        holdReason('step', true);
+        view.scrollTo({ left: target.offsetLeft + target.offsetWidth / 2 - view.clientWidth / 2, behavior: reduced() ? 'auto' : 'smooth' });
+        clearTimeout(stepTimer);
+        // Long enough for the smooth-scroll to land before the drift re-syncs its cached position,
+        // or the strip visibly jitters as the two fight over scrollLeft.
+        stepTimer = setTimeout(() => { pos = null; wrap(); holdReason('step', false); }, 700);
+      }
+      function stepCar(dir) {
+        const list = activeCells();
+        const mid = view.scrollLeft + view.clientWidth / 2;
+        let best = 0, dist = Infinity;
+        list.forEach((cell, i) => { const d = Math.abs(cell.offsetLeft + cell.offsetWidth / 2 - mid); if (d < dist) { dist = d; best = i; } });
+        goTo(list[Math.min(list.length - 1, Math.max(0, best + dir))]);
+      }
+      on(prevBtn, 'click', () => stepCar(-1));
+      on(nextBtn, 'click', () => stepCar(1));
+      on(view, 'keydown', e => { if (e.key === 'ArrowLeft') { stepCar(-1); e.preventDefault(); } else if (e.key === 'ArrowRight') { stepCar(1); e.preventDefault(); } });
+      on(track, 'click', e => { const cell = e.target.closest('.bb-car-cell'); if (cell && !cell.hasAttribute('aria-hidden')) goTo(cell); });
+      on(view, 'scroll', paintCar, { passive: true });
+      on(strip, 'pointerenter', () => holdReason('hover', true));
+      on(strip, 'pointerleave', () => holdReason('hover', false));
+      on(strip, 'focusin', () => holdReason('hover', true));
+      on(strip, 'focusout', () => holdReason('hover', false));
+      on(view, 'pointerdown', () => holdReason('press', true));
+      on(window, 'pointerup', () => holdReason('press', false), { passive: true });
+      on(document, 'visibilitychange', () => holdReason('hidden', document.hidden));
+
+      function settleCar() {
+        if (reduced()) {
+          if (carRaf !== null) { cancelAnimationFrame(carRaf); carRaf = null; }
+          carRunning = false; pos = null;
+          cells.forEach(cell => { cell.style.transform = ''; cell.style.opacity = ''; cell.style.transformOrigin = ''; cell.classList.add('is-focus'); });
+          return;
+        }
+        measureSet(); normalise(); paintCar(); syncCar();
+      }
+      on(window, 'resize', () => later(settleCar, 120));
+      on(matchMedia(RM), 'change', settleCar);
+
+      const carIO = new IntersectionObserver(es => es.forEach(e => holdReason('off', !e.isIntersecting)), { threshold: 0.15 });
+      carIO.observe(strip);
+      cleanups.push(() => carIO.disconnect());
+      cleanups.push(() => { if (carRaf !== null) cancelAnimationFrame(carRaf); });
+
+      settleCar();
     });
 
     /* ---------------- The one interactive moment: auto-pour when the section scrolls into view ---------------- */
@@ -748,7 +895,7 @@
         Object.assign(opts, next || {});
         if (next && next.start !== undefined && next.start !== prevStart) liveStart = null;   // filmStart is the base start again
         if (next && next.portraitStart !== undefined && next.portraitStart !== prevPStart) liveStart = null;
-        if (hero && opts.heroVh) hero.style.height = opts.heroVh + 'vh';
+        if (hero) hero.style.height = heroVhNow() + 'vh';
         if (filmInited) paintPoster();
         applyVideoFit();
         measure();
@@ -760,4 +907,147 @@
   }
 
   window.BBFilm = { init };
+})();
+
+/* ---- Section jump arrows --------------------------------------------------
+   Two chevrons that step through the page's top-level sections, one press a
+   section. Deliberately its own IIFE, independent of BBFilm above: it only
+   ever reads the DOM (the cue's own hidden state, the header's live height),
+   so it stays correct whichever of that engine's states — playing, paused,
+   pinned for reduced motion — happen to be current, with no need to reach
+   into its closures.
+
+   Nothing here is cached across a scroll tick — not the buttons, not the
+   header, not the cue. film-engine.js loads and runs this in <head>, before
+   <body> exists, and the page's own DC-template runtime replaces whatever it
+   first painted with its real render shortly after that — proven with a
+   headless capture where element references grabbed on first run had gone
+   stale (0×0 rects) by the time the page had actually settled, while a fresh
+   query at the same moment read the real, laid-out header. Querying fresh
+   inside every sync() sidesteps that outright: whichever nodes are live when
+   a tick runs are the ones read and written. Clicks are delegated to
+   `document` for the same reason — the one element in this whole chain
+   guaranteed never to be swapped out from under a listener.
+
+   Stops: every direct child <section> of #main, plus the footer's own cup
+   film, count as a step — that list is exactly "The sections, in page
+   order" this was briefed against, hero and footer included. The hero
+   counts as a step like any other: its own stop sits at the very top of the
+   document, so the down arrow's target the moment it first appears — as
+   soon as the visitor has scrolled past the "Scroll to pour" cue, see
+   cueShowing below — is still Shop, the whole rest of the 360vh pour in one
+   press. The pour is skippable, not mandatory — a genuine fast path for a
+   visitor who came back for the menu, not the film, and a quieter way to
+   skip scroll-jacking than none at all. A hidden section
+   (offsetHeight 0 — <section data-bb="static-hero"> normally, or the film
+   hero itself under reduced motion or short-landscape mode, where the CSS
+   swaps which of the two is shown) drops out of the stop list on its own,
+   no extra state to track.
+
+   The footer is the last stop. Landing on it retires the down arrow for
+   the rest of its 240vh cup film rather than trying to keep clearing the
+   address/Instagram/email block that sits pinned to the same
+   viewport-bottom band for that whole stretch — simplest way to guarantee
+   the two never share the screen. */
+(function () {
+  var SECTION_SELECTOR = '#main > section, [data-bb="end"]';
+  var GAP = 14; // breathing room below the fixed header, in px
+
+  // A landed section sits a pixel or so either side of its own stop; anything inside this
+  // counts as already there, so the arrow offers the next stop instead of nudging back onto
+  // the section already on screen.
+  var EPS = 8;
+
+  var root = document.scrollingElement || document.documentElement;
+  var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  var maxScroll = function () {
+    return Math.max(0, root.scrollHeight - root.clientHeight);
+  };
+
+  var headerOffset = function () {
+    var header = document.querySelector('[data-bb="header"]');
+    return header ? header.offsetHeight : 0;
+  };
+
+  var anchorTop = function (el) {
+    return Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerOffset());
+  };
+
+  // Every stop on the page, measured on demand rather than cached, so a stop is never stale
+  // behind a reflow. offsetHeight filters out whichever hero variant the CSS currently hides.
+  var stops = function () {
+    var out = [];
+    var max = maxScroll();
+    document.querySelectorAll(SECTION_SELECTOR).forEach(function (sec) {
+      if (!sec.offsetHeight) return;
+      out.push(Math.min(anchorTop(sec), max));
+    });
+    return out;
+  };
+
+  var beyond = function (list, y, dir) {
+    var found = null;
+    for (var i = 0; i < list.length; i++) {
+      if (dir > 0) {
+        if (list[i] > y + EPS) { found = list[i]; break; }
+      } else if (list[i] < y - EPS) {
+        found = list[i];
+      }
+    }
+    return found;
+  };
+
+  var step = function (dir) {
+    var to = beyond(stops(), window.scrollY, dir);
+    if (to === null) return;
+    window.scrollTo({ top: to, behavior: motionQuery.matches ? 'auto' : 'smooth' });
+  };
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest && e.target.closest('#jump-up, #jump-down');
+    if (!t) return;
+    step(t.id === 'jump-up' ? -1 : 1);
+  });
+
+  // The hero's own "Scroll to pour" cue already invites the first move; showing the down
+  // arrow on top of it at the very top of the page would both duplicate that invitation and,
+  // positioned where it is, sit right over it. offsetParent is null whenever the cue (or an
+  // ancestor — the whole hero, under reduced motion or short-landscape mode) is display:none,
+  // so this reads as "not showing" there too, with nothing extra to track.
+  var cueShowing = function () {
+    var cue = document.querySelector('[data-bb="cue"]');
+    return !!cue && cue.offsetParent !== null && !cue.classList.contains('bb-hidden');
+  };
+
+  // Only written on the change: setting hidden to what it already is still costs a style
+  // invalidation, and this runs on every scroll tick.
+  var reveal = function (el, gone) { if (el && el.hidden !== gone) el.hidden = gone; };
+
+  var raf = null;
+  var sync = function () {
+    raf = null;
+    var up = document.getElementById('jump-up');
+    var down = document.getElementById('jump-down');
+    if (!up || !down) return;
+    var wrap = up.closest('.jump') || up.parentElement;
+    if (wrap) wrap.style.setProperty('--jump-offset-top', (headerOffset() + GAP) + 'px');
+    var list = stops();
+    var y = window.scrollY;
+    reveal(up, beyond(list, y, -1) === null);
+    reveal(down, cueShowing() || y >= maxScroll() - EPS || beyond(list, y, 1) === null);
+  };
+  var kick = function () { if (!raf) raf = window.requestAnimationFrame(sync); };
+
+  window.addEventListener('scroll', kick, { passive: true });
+  window.addEventListener('resize', kick);
+  window.addEventListener('load', kick);
+  if (typeof motionQuery.addEventListener === 'function') {
+    motionQuery.addEventListener('change', kick);
+  }
+  sync();
+  // The buttons can still be mid-swap on this first pass (see above), so give sync a few more
+  // unprompted ticks over the following second rather than waiting on a real scroll or resize to
+  // ever arrive — cheap, and it's what makes the arrows correct on a page load with no interaction.
+  [50, 150, 300, 600, 1000].forEach(function (ms) { setTimeout(kick, ms); });
 })();

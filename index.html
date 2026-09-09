@@ -147,6 +147,13 @@ input,textarea,button{font:inherit}
   [data-bb="hero"] .bb-band h1,[data-bb="hero"] .bb-band h2{font-size:clamp(40px,11vw,72px)!important}
   [data-bb="hero"] .bb-band p{font-size:16px!important;max-width:36ch}
   [data-bb="hero"] .bb-band::before{inset:-16% -14%}
+  /* Phone-only: the arrival travel each hero band's --kc drives (see .bb-e-drift/.bb-e-rise/.bb-e-depth
+     above) is barely perceptible at -30px/26px/.84-1 on a small screen, so it is amplified here rather than
+     for every viewport. Vertical-only, so this cannot introduce horizontal overflow at any phone width.
+     --kc itself still comes from the base rule; only the transform this reads it into changes. */
+  [data-bb="hero"] .bb-e-drift .bb-w{transform:translateY(calc((1 - var(--kc))*-60px))!important}
+  [data-bb="hero"] .bb-e-rise .bb-w{transform:translateY(calc((1 - var(--kc))*52px))!important}
+  [data-bb="hero"] .bb-e-depth .bb-w{transform:scale(calc(.8 + .2*var(--kc)))!important}
   .bb-band .bb-glide{transform:translate3d(0,calc((.5 - var(--pb,.5))*28px),0)}
   [data-bb="end"] .bb-band{left:20px!important;right:20px!important;width:auto!important;transform:none!important}
   [data-bb="endmark"]{font-size:clamp(52px,13vw,164px)!important}
@@ -168,6 +175,14 @@ input,textarea,button{font:inherit}
 @media (max-height:560px){[data-bb="cue"]{display:none!important}}
 @media (max-width:900px){[data-bb="hold-col"]{position:static!important}}
 @media (pointer:coarse){.bb-btn{min-height:48px}}
+/* Per-section landing offsets, base (>760px): same idea as the phone override below, values
+   measured at 1280px where pour's badge sits beside its heading instead of stacking above it. */
+#shop{scroll-margin-top:-36px}
+#pour{scroll-margin-top:-23px}
+#room{scroll-margin-top:-36px}
+#club{scroll-margin-top:11px}
+#reviews{scroll-margin-top:-52px}
+#find{scroll-margin-top:-24px}
 /* ---------- Phones and small screens ---------- */
 a,button{-webkit-tap-highlight-color:transparent}
 /* Phone header: the wordmark keeps its own row, the four section links sit on a scrolling rail under it.
@@ -181,7 +196,18 @@ a,button{-webkit-tap-highlight-color:transparent}
   [data-bb="header"] nav>a{flex:none;display:inline-flex;align-items:center;min-height:48px;padding-right:22px;font-size:11px!important;letter-spacing:0.14em!important;white-space:nowrap;text-shadow:0 1px 2px rgba(6,4,3,.95),0 3px 12px rgba(6,4,3,.78)}
   [data-bb="header"] nav>a:last-child{padding-right:8px}
   .bb-nav-lg{display:none}
-  #main,#shop,#pour,#room,#club,#reviews,#find{scroll-margin-top:104px}
+  #main{scroll-margin-top:104px}
+  /* Per-section landing offsets, phone: each section's heading sits a different distance below its
+     own top edge (pour's badge column and club's time badge stack above their headings here), so a
+     single shared offset landed some headings far too low. scroll-margin-top = 160 (target landing
+     depth) minus that section's measured heading-below-top gap at 390px; negative is correct where
+     the gap already exceeds 160. */
+  #shop{scroll-margin-top:21px}
+  #pour{scroll-margin-top:-248px}
+  #room{scroll-margin-top:22px}
+  #club{scroll-margin-top:-82px}
+  #reviews{scroll-margin-top:-13px}
+  #find{scroll-margin-top:29px}
 }
 /* A fixed 100vh stage fights the iOS toolbar; svh keeps the bottom of a band on screen. */
 @media (max-width:900px){
@@ -282,12 +308,53 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
   [data-bb="steam"]{opacity:0!important}
   [data-bb="track"]{flex-wrap:wrap;width:auto!important;justify-content:center}
   [data-bb="track"] [data-dup]{display:none}
+  /* Photo carousels: no drift under reduced motion. Drop the two clone sets so the native
+     scroller holds just the real photos once, and force every remaining cell to full size
+     and full opacity so nothing looks artificially dimmed by the depth-drift script. */
+  .bb-car-cell[aria-hidden="true"]{display:none}
+  .bb-car-cell{opacity:1!important;transform:none!important}
+  /* The centring padding exists to hold a drifting cell mid-view; a still row should just start flush. */
+  .bb-car-track{padding-inline:0!important}
 }
+/* Depth-drift photo carousels (#pour, #room). One scroll position drives drift, drag, swipe, arrow
+   keys and the prev/next buttons; each cell scales/fades by its own distance from the view's centre.
+   #pour keeps its existing brass-hairline, dark-inset, soft-lift treatment (.bb-car--pour); #room keeps
+   its existing plainer dark-border treatment as the base look, so each carousel stays native to the
+   section it already belonged to. */
+.bb-car{position:relative;--cw:clamp(190px,46vw,300px)}
+.bb-car-view{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-block:6px;--edge:2rem;-webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--edge),#000 calc(100% - var(--edge)),transparent);mask-image:linear-gradient(90deg,transparent,#000 var(--edge),#000 calc(100% - var(--edge)),transparent)}
+.bb-car-view::-webkit-scrollbar{display:none}
+.bb-car-track{display:flex;gap:clamp(18px,2.4vw,28px);padding-inline:calc(50% - var(--cw)/2)}
+.bb-car-cell{appearance:none;-webkit-appearance:none;flex:0 0 var(--cw);aspect-ratio:1/1;padding:0;margin:0;overflow:hidden;background:#15110E;color:inherit;font:inherit;cursor:pointer;will-change:transform;border-radius:6px;border:1px solid #2E2723}
+.bb-car-cell img{display:block;width:100%;height:100%;object-fit:cover}
+.bb-car-cell.is-focus{border-color:#C9A54E}
+.bb-car--pour .bb-car-cell{border-radius:8px;border-color:rgba(201,165,78,.55);box-shadow:inset 0 0 0 1px rgba(46,39,35,.9),0 14px 34px rgba(0,0,0,.4)}
+.bb-car--pour .bb-car-cell.is-focus{box-shadow:inset 0 0 0 1px rgba(46,39,35,.9),0 18px 40px rgba(0,0,0,.5)}
+.bb-car-btn{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(11,9,8,.72);border:1px solid rgba(233,227,211,.24);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#E9E3D3;display:grid;place-items:center;padding:0;cursor:pointer;transition:border-color .3s,color .3s}
+.bb-car-btn:hover{border-color:#C9A54E;color:#C9A54E}
+.bb-car-prev{left:-6px}
+.bb-car-next{right:-6px}
+@media (min-width:640px){.bb-car-prev{left:-22px}.bb-car-next{right:-22px}}
+@media (max-width:900px){.bb-car-view{--edge:1.25rem}}
 .leaflet-container{background:#211B17!important}
 .leaflet-control-attribution{background:rgba(21,17,14,.85)!important;color:#B5AB9C!important;font:11px/1.5 'Libre Franklin',sans-serif!important}
 .leaflet-control-attribution a{color:#C9A54E!important}
 .leaflet-tooltip{background:#15110E;color:#E9E3D3;border:1px solid #3A322D;font:500 12px/1 'Libre Franklin',sans-serif;letter-spacing:.08em;text-transform:uppercase;box-shadow:none}
 .leaflet-tooltip-top:before{border-top-color:#3A322D}
+/* Section jump arrows: brass/cream chevrons that step through the page's top-level sections and the
+   footer's cup film, one press a section. Fixed at the top/bottom edges so they never move with scroll;
+   the top offset is set live by film-engine.js from the header's own measured height, so it clears it
+   exactly at any width. Bare chevrons, no disc or border, so they read as a direction rather than a
+   third kind of button competing with the page's real CTAs. */
+.jump{--jump-color:#B5AB9C;--jump-hover:#C9A54E;--jump-offset-top:78px;--jump-offset-bottom:24px;position:fixed;inset:0;z-index:40;pointer-events:none;display:flex;flex-direction:column;align-items:center;padding:var(--jump-offset-top) 0 calc(var(--jump-offset-bottom) + env(safe-area-inset-bottom,0px))}
+.jump-down{margin-top:auto}
+.jump-btn{pointer-events:auto;display:grid;place-items:center;width:56px;height:48px;padding:0;background:none;border:0;color:var(--jump-color);cursor:pointer;transition:color .25s ease,transform .25s ease}
+.jump-btn[hidden]{display:none}
+.jump-btn svg{display:block;width:36px;height:auto;filter:drop-shadow(0 0 2px rgba(0,0,0,.6)) drop-shadow(0 1px 6px rgba(0,0,0,.4))}
+.jump-up svg{transform:rotate(180deg)}
+.jump-btn:hover,.jump-btn:focus-visible{color:var(--jump-hover)}
+.jump-up:hover{transform:translateY(-2px)}
+.jump-down:hover{transform:translateY(2px)}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" id="top" style="position:relative;color:#E9E3D3;overflow-x:clip">
@@ -566,10 +633,17 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
       </div>
     </div>
     </div>
-    <div class="bb-reveal" style="width:100%;display:flex;flex-wrap:wrap;gap:clamp(18px,2.4vw,28px)">
-      <img data-part loading="lazy" decoding="async" width="874" height="874" src="assets/photos/portafilters-beans-latte-flatlay.jpg" alt="Overhead flat lay on the walnut counter: a portafilter of ground coffee, a portafilter of whole beans, and a latte with leaf-rosetta art" style="--i:0;display:block;flex:1 1 min(100%,320px);min-width:0;width:100%;max-width:100%;height:auto;border-radius:8px;border:1px solid rgba(201,165,78,.55);box-shadow:inset 0 0 0 1px rgba(46,39,35,.9),0 14px 34px rgba(0,0,0,.4)">
-      <img data-part loading="lazy" decoding="async" width="874" height="874" src="assets/photos/latte-monogram-walnut-table.jpg" alt="Overhead on the walnut table: a latte with the Brick &amp; Beam monogram stencilled in the foam, a black cup and saucer, succulents for sale behind" style="--i:1;display:block;flex:1 1 min(100%,320px);min-width:0;width:100%;max-width:100%;height:auto;border-radius:8px;border:1px solid rgba(201,165,78,.55);box-shadow:inset 0 0 0 1px rgba(46,39,35,.9),0 14px 34px rgba(0,0,0,.4)">
-      <img data-part loading="lazy" decoding="async" width="874" height="820" src="assets/photos/latte-counter-window-flowers.jpg" alt="A latte on the dark walnut counter by the window, with a potted plant and a basket of fresh flowers, the sidewalk visible outside" style="--i:2;display:block;flex:1 1 min(100%,320px);min-width:0;width:100%;max-width:100%;height:auto;border-radius:8px;border:1px solid rgba(201,165,78,.55);box-shadow:inset 0 0 0 1px rgba(46,39,35,.9),0 14px 34px rgba(0,0,0,.4)">
+    <div class="bb-car bb-car--pour" data-bb="car" style="width:100%">
+      <div class="bb-car-view" tabindex="0" role="group" aria-roledescription="carousel" aria-label="What we pour photos, scrolls sideways">
+        <div class="bb-car-track">
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="874" height="874" src="assets/photos/portafilters-beans-latte-flatlay.jpg" alt="Overhead flat lay on the walnut counter: a portafilter of ground coffee, a portafilter of whole beans, and a latte with leaf-rosetta art"></button>
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="874" height="874" src="assets/photos/latte-monogram-walnut-table.jpg" alt="Overhead on the walnut table: a latte with the Brick &amp; Beam monogram stencilled in the foam, a black cup and saucer, succulents for sale behind"></button>
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="874" height="820" src="assets/photos/latte-counter-window-flowers.jpg" alt="A latte on the dark walnut counter by the window, with a potted plant and a basket of fresh flowers, the sidewalk visible outside"></button>
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="747" height="874" src="assets/photos/barista-steaming-milk.jpg" alt="A barista's hands steaming milk at the espresso machine, backlit by rising steam"></button>
+        </div>
+      </div>
+      <button type="button" class="bb-car-btn bb-car-prev" aria-label="Previous pour photo"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button type="button" class="bb-car-btn bb-car-next" aria-label="Next pour photo"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </div>
 </section>
@@ -594,10 +668,17 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
       <h2 data-split="mask" data-kinetic style="font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:clamp(50px,8vw,132px);line-height:0.9;text-transform:uppercase;letter-spacing:0.004em;color:#E9E3D3;margin:0;max-width:16ch;text-wrap:balance">Brick walls, walnut counter, good coffee</h2>
       <p data-part style="--i:2;font-family:'Libre Franklin',sans-serif;font-size:clamp(17px,1.3vw,20px);line-height:1.55;color:#E9E3D3;margin:0;max-width:46ch;text-wrap:pretty">Exposed brick inside and out. A live-edge walnut counter facing the window. People stay a while here, and plenty get work done.</p>
     </div>
-    <div class="bb-reveal" style="width:100%;display:flex;flex-wrap:wrap;gap:clamp(18px,2.4vw,28px)">
-      <img data-part loading="lazy" decoding="async" width="764" height="874" src="assets/photos/walnut-counter-window-view.jpg" alt="The live-edge walnut counter with the Brick &amp; Beam logo etched into the wood, facing the window onto King Street" style="--i:0;display:block;flex:1 1 min(100%,320px);min-width:0;width:100%;max-width:100%;height:auto;border-radius:6px;border:1px solid #2E2723">
-      <img data-part loading="lazy" decoding="async" width="874" height="874" src="assets/photos/exterior-storefront-sign.jpg" alt="The red brick corner exterior of Brick &amp; Beam Coffee Co, with the black fascia sign in gold lettering and street reflections in the windows" style="--i:1;display:block;flex:1 1 min(100%,320px);min-width:0;width:100%;max-width:100%;height:auto;border-radius:6px;border:1px solid #2E2723">
-      <img data-part loading="lazy" decoding="async" width="874" height="820" src="assets/photos/ceramic-mugs-shelving-menu.jpg" alt="Handmade ceramic mugs stamped with the shop's logo on wood-and-black-steel shelving, with the menu board and exposed brick wall behind" style="--i:2;display:block;flex:1 1 min(100%,320px);min-width:0;width:100%;max-width:100%;height:auto;border-radius:6px;border:1px solid #2E2723">
+    <div class="bb-car bb-car--room" data-bb="car" style="width:100%">
+      <div class="bb-car-view" tabindex="0" role="group" aria-roledescription="carousel" aria-label="The room photos, scrolls sideways">
+        <div class="bb-car-track">
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="764" height="874" src="assets/photos/walnut-counter-window-view.jpg" alt="The live-edge walnut counter with the Brick &amp; Beam logo etched into the wood, facing the window onto King Street"></button>
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="874" height="874" src="assets/photos/exterior-storefront-sign.jpg" alt="The red brick corner exterior of Brick &amp; Beam Coffee Co, with the black fascia sign in gold lettering and street reflections in the windows"></button>
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="874" height="820" src="assets/photos/ceramic-mugs-shelving-menu.jpg" alt="Handmade ceramic mugs stamped with the shop's logo on wood-and-black-steel shelving, with the menu board and exposed brick wall behind"></button>
+          <button type="button" class="bb-car-cell"><img loading="lazy" decoding="async" width="736" height="874" src="assets/photos/iced-mocha-brick-wall.jpg" alt="An iced mocha topped with whipped cream held up against the exposed red brick wall"></button>
+        </div>
+      </div>
+      <button type="button" class="bb-car-btn bb-car-prev" aria-label="Previous room photo"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button type="button" class="bb-car-btn bb-car-next" aria-label="Next room photo"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="bb-reveal" style="width:100%;display:flex;justify-content:center;padding-top:clamp(24px,3vw,40px);border-top:1px solid #2E2723">
       <div data-part style="--i:0;display:flex;align-items:baseline;gap:14px">
@@ -761,9 +842,21 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
     </div>
   </div>
 </footer>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-chev-flat" viewBox="0 0 30 9"><path d="M1.4 1.4 15 7.6 28.6 1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+<div class="jump">
+  <button class="jump-btn jump-up" id="jump-up" type="button" aria-label="Previous section" hidden>
+    <svg viewBox="0 0 30 9" aria-hidden="true" focusable="false"><use href="#i-chev-flat"/></svg>
+  </button>
+  <button class="jump-btn jump-down" id="jump-down" type="button" aria-label="Next section" hidden>
+    <svg viewBox="0 0 30 9" aria-hidden="true" focusable="false"><use href="#i-chev-flat"/></svg>
+  </button>
+</div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;videoSrc&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;assets/hero-film.mp4&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;filmStart&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:0.5,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;intro&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;introEnd&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.3361,&quot;min&quot;:0,&quot;max&quot;:0.6,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;introEase&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.35,&quot;min&quot;:0,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;filmZoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.08,&quot;min&quot;:1,&quot;max&quot;:1.5,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitVideoSrc&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;assets/hero-film-portrait.mp4&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitStart&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:0.5,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitIntroEnd&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.1569,&quot;min&quot;:0,&quot;max&quot;:0.6,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitZoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:1.5,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;heroLength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:360,&quot;min&quot;:240,&quot;max&quot;:600,&quot;step&quot;:20,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;sharpen&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.7,&quot;min&quot;:0,&quot;max&quot;:1.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;dim&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.72,&quot;min&quot;:0.4,&quot;max&quot;:0.9,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;grain&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Texture&quot;},&quot;formPreview&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;live&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;empty&quot;,&quot;error&quot;,&quot;sent&quot;],&quot;tsType&quot;:&quot;'live' | 'empty' | 'error' | 'sent'&quot;,&quot;section&quot;:&quot;Contact form&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;videoSrc&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;assets/hero-film.mp4&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;filmStart&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:0.5,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;intro&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;introEnd&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.3361,&quot;min&quot;:0,&quot;max&quot;:0.6,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;introEase&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.35,&quot;min&quot;:0,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;filmZoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.08,&quot;min&quot;:1,&quot;max&quot;:1.5,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitVideoSrc&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;assets/hero-film-portrait.mp4&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitStart&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:0.5,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitIntroEnd&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.1569,&quot;min&quot;:0,&quot;max&quot;:0.6,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitZoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:1.5,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;heroLength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:360,&quot;min&quot;:240,&quot;max&quot;:600,&quot;step&quot;:20,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;portraitHeroVh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:260,&quot;min&quot;:160,&quot;max&quot;:360,&quot;step&quot;:20,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;sharpen&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.7,&quot;min&quot;:0,&quot;max&quot;:1.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;dim&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.72,&quot;min&quot;:0.4,&quot;max&quot;:0.9,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Film&quot;},&quot;grain&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Texture&quot;},&quot;formPreview&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;live&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;empty&quot;,&quot;error&quot;,&quot;sent&quot;],&quot;tsType&quot;:&quot;'live' | 'empty' | 'error' | 'sent'&quot;,&quot;section&quot;:&quot;Contact form&quot;}}">
 class Component extends DCLogic {
   state = { name: '', email: '', message: '', status: 'empty', errors: {} };
   rootRef = React.createRef();
@@ -771,7 +864,7 @@ class Component extends DCLogic {
 
   componentDidMount() { this._bootEngine(); this._initMap(); this._clock = setInterval(() => this.forceUpdate(), 30000); }
   componentDidUpdate(prev) {
-    if (prev.videoSrc !== this.props.videoSrc || prev.portraitVideoSrc !== this.props.portraitVideoSrc || prev.heroLength !== this.props.heroLength) { this._teardownEngine(); this._bootEngine(); return; }
+    if (prev.videoSrc !== this.props.videoSrc || prev.portraitVideoSrc !== this.props.portraitVideoSrc || prev.heroLength !== this.props.heroLength || prev.portraitHeroVh !== this.props.portraitHeroVh) { this._teardownEngine(); this._bootEngine(); return; }
     if ((prev.sharpen !== this.props.sharpen || prev.dim !== this.props.dim || prev.filmStart !== this.props.filmStart || prev.filmZoom !== this.props.filmZoom || prev.intro !== this.props.intro || prev.introEnd !== this.props.introEnd || prev.introEase !== this.props.introEase || prev.portraitStart !== this.props.portraitStart || prev.portraitZoom !== this.props.portraitZoom || prev.portraitIntroEnd !== this.props.portraitIntroEnd) && this._film) this._film.set({ sharpen: this.props.sharpen ?? 0.7, dim: this.props.dim ?? 0.72, start: this.props.filmStart ?? 0, zoom: this.props.filmZoom ?? 1.08, intro: this.props.intro ?? true, introEnd: this.props.introEnd ?? 0.3361, introEase: this.props.introEase ?? 0.35, portraitStart: this.props.portraitStart ?? 0, portraitZoom: this.props.portraitZoom ?? 1, portraitIntroEnd: this.props.portraitIntroEnd ?? 0.1569 });
   }
   componentWillUnmount() {
@@ -789,7 +882,7 @@ class Component extends DCLogic {
       portraitVideoSrc: this.props.portraitVideoSrc ?? 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg', portraitVideoBytes: 4056359,
       portraitStart: this.props.portraitStart ?? 0, portraitZoom: this.props.portraitZoom ?? 1, portraitZones: [0.4119, 0.7366], portraitIntroEnd: this.props.portraitIntroEnd ?? 0.1569,
       intro: this.props.intro ?? true, introEase: this.props.introEase ?? 0.35,
-      heroVh: this.props.heroLength ?? 360, sharpen: this.props.sharpen ?? 0.7, dim: this.props.dim ?? 0.72
+      heroVh: this.props.heroLength ?? 360, portraitHeroVh: this.props.portraitHeroVh ?? 260, sharpen: this.props.sharpen ?? 0.7, dim: this.props.dim ?? 0.72
     });
   }
   _teardownEngine() { clearTimeout(this._engT); if (this._film) { this._film.destroy(); this._film = null; } }
