@@ -75,12 +75,21 @@ foreach ($path in $explicitPaths) {
 }
 
 # 3. Commit — but don't error out if there is nothing staged to commit.
+#    Every commit this script makes must carry the required attribution
+#    trailer. `git commit -m subject -m trailer` joins the two with a
+#    blank line between them, which is exactly the shape a trailer needs.
+$attributionTrailer = "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 $staged = git diff --cached --name-only
 if ([string]::IsNullOrWhiteSpace($staged)) {
     Write-Host "Nothing to commit (working tree matches last commit). Skipping commit, will still push."
 } else {
     Write-Host "Committing with message: $Message"
-    git commit -m "$Message"
+    if ($Message.Contains("Co-Authored-By")) {
+        # Caller already supplied a trailer of their own — don't double it up.
+        git commit -m "$Message"
+    } else {
+        git commit -m "$Message" -m "$attributionTrailer"
+    }
     if ($LASTEXITCODE -ne 0) {
         Write-Error "git commit failed (exit $LASTEXITCODE)."
         exit 1

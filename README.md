@@ -985,3 +985,9 @@ which GitHub Pages serves directly — there is no separate build step. Because 
 Open Graph/Twitter meta tags live in the real `<head>` (not just inside the `<helmet>` block that
 `support.js` injects at runtime), link previews in messaging apps and social platforms work without
 needing JavaScript to run.
+
+`deploy.ps1` also appends the required `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
+trailer to every commit it makes (via a second `git commit -m` value, which git joins to the
+subject with a blank line — the correct trailer shape), so callers never need to add it by hand.
+If a caller passes a message that already contains a `Co-Authored-By` trailer, the script leaves
+it alone rather than appending a duplicate.
