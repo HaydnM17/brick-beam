@@ -642,16 +642,50 @@
       if (holdRaf !== null) { cancelAnimationFrame(holdRaf); holdRaf = null; }
       hold.style.setProperty('--h', '0');
       if (pourSection) pourSection.classList.remove('bb-done');
-      if (pourIO && pourSection) pourIO.observe(pourSection); // section may already be in view again
+      if (pourIO && hold) pourIO.observe(hold); // badge may already be in view again
     }
     if (hold && pourSection) {
       if (pourSection.classList.contains('bb-done')) { holdDone = true; h = 1; }
       else {
         // The "Proudly Brewed" line arrives with the badge's own reveal; hold the fill back so it reads first.
-        pourIO = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) { later(startPour, POUR_DELAY_MS); pourIO.unobserve(pourSection); } }); }, { threshold: 0.35 });
-        pourIO.observe(pourSection);
+        // Observe the badge itself, not the whole section: three photos were added to #pour and on a
+        // phone the stacked section is taller than the viewport, so a section-wide threshold could
+        // never be satisfied. The badge's size doesn't depend on how much content sits below it.
+        pourIO = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) { later(startPour, POUR_DELAY_MS); pourIO.unobserve(hold); } }); }, { threshold: 0.6 });
+        pourIO.observe(hold);
         cleanups.push(() => pourIO.disconnect());
       }
+    }
+
+    /* ---------------- Nav scrollspy: mark whichever section currently sits over the screen's centre ----------------
+       Nothing in the nav could ever highlight before this: the links only had a hover colour, and phones
+       have no hover. The Instagram link is external (no #href) and is never a candidate. A rootMargin that
+       eats 45% off the top and bottom shrinks the "viewport" IntersectionObserver measures against down to a
+       thin band across the middle of the screen, so a section only counts as active once it crosses the
+       centre line — this is what keeps the mark from flickering between neighbours on a fast scroll, rather
+       than reacting to whichever section merely touches the edge of the screen first. */
+    const navSpyLinks = qa('[data-bb="header"] nav a[href^="#"]')
+      .map(a => ({ a, el: q(a.getAttribute('href')) }))
+      .filter(x => x.el);
+    if (navSpyLinks.length) {
+      const navRatios = new Map();
+      let navActive = null;
+      function paintNavSpy() {
+        let best = null, bestRatio = 0;
+        navRatios.forEach((r, el) => { if (r > bestRatio) { bestRatio = r; best = el; } });
+        if (best === navActive) return;
+        navActive = best;
+        navSpyLinks.forEach(({ a, el }) => {
+          if (el === navActive) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      }
+      const navSpyIO = new IntersectionObserver(es => {
+        es.forEach(e => navRatios.set(e.target, e.isIntersecting ? e.intersectionRatio : 0));
+        paintNavSpy();
+      }, { rootMargin: '-45% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+      navSpyLinks.forEach(({ el }) => navSpyIO.observe(el));
+      cleanups.push(() => navSpyIO.disconnect());
     }
 
     /* ---------------- Reduced motion, honored live in both directions ---------------- */

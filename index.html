@@ -269,6 +269,9 @@ body.bb-paused *,body.bb-paused *::before,body.bb-paused *::after{animation-play
 .bb-pinned [data-bb="steam"]{opacity:0!important}
 .bb-pinned [data-bb="track"]{animation:none!important;flex-wrap:wrap;width:auto!important;justify-content:center}
 .bb-pinned [data-bb="track"] [data-dup]{display:none}
+/* Nav scrollspy: the active section's link gets brass colour plus a thin underline, never colour alone. */
+[data-bb="header"] nav a{transition:color .3s,text-decoration-color .3s cubic-bezier(.22,1,.36,1)!important}
+[data-bb="header"] nav a[aria-current="true"]{color:#C9A54E!important;text-decoration:underline!important;text-decoration-thickness:1px!important;text-underline-offset:6px!important;text-decoration-color:#C9A54E!important}
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important;transition-delay:0s!important}
