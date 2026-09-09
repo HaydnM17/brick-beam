@@ -12,3 +12,5 @@ _*.txt
 _*.png
 edgeprof*/
 *.bak
+_*/
+_*.json
