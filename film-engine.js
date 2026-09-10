@@ -151,14 +151,23 @@
   function init(root, opts) {
     opts = Object.assign({
       videoSrc: 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5417655,
-      start: 0, zoom: 1.08, zones: [0.5645, 0.6899], introEnd: 0.3361,
+      // Both films end on a hold, and the hold freezes a frame with a coffee drop suspended mid-air rather
+      // than the finished cup. endProg/portraitEndProg stop the scrub short of that frame: 0.9153 (~15.23s
+      // of 16.63s) is the landscape film's last completely drop-free instant, sitting in the gap after the
+      // stream breaks up and before the next drop enters frame. See portraitEndProg below for the portrait
+      // film's own value, which is not a clean gap the same way.
+      start: 0, zoom: 1.08, zones: [0.5645, 0.6899], introEnd: 0.3361, endProg: 0.9153,
       // The portrait film. Its own source, its own poster, its own byte count for the ring, its own mapping.
       portraitVideoSrc: 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg', portraitVideoBytes: 4056359,
       // portraitIntroEnd has to land inside the pour zone, below portraitZones[0], or the intro hands the
       // playhead over past the frame the hero scroll is aiming at and the hero has nothing left to scrub.
       // 0.1569 (~2.73s) lands safely past the drip becoming a continuous stream (~2.0s) and stays below
       // portraitZones[0] (0.4119, ~7.16s), which is where the hero's scrub range now ends.
-      portraitStart: 0, portraitZoom: 1, portraitZones: [0.4119, 0.7366], portraitIntroEnd: 0.1569,
+      // portraitEndProg (0.9733, ~16.92s of 17.38s) is not a clean gap like the landscape value above: this
+      // film's drip never fully clears frame before the next drop enters, so 16.9167s is the closest thing
+      // to one, the last frame with the trailing drop at its lowest, faintest, most-merged-with-the-crema
+      // point, one frame before the next drop appears at the top edge. Flagged for Haydn, not a real fix.
+      portraitStart: 0, portraitZoom: 1, portraitZones: [0.4119, 0.7366], portraitIntroEnd: 0.1569, portraitEndProg: 0.9733,
       // The portrait hero is shorter than the landscape one (360vh): on a phone the same vh count means far
       // more physical scrolling, so portraitHeroVh trims it independently. Picked up the same way as
       // portraitZones/portraitIntroEnd above, through filmIsPortrait.
@@ -199,6 +208,10 @@
     const introEndNow = () => clamp(Number(filmIsPortrait ? opts.portraitIntroEnd : opts.introEnd) || 0, 0, 1);
     const zoomNow     = () => Number(filmIsPortrait ? opts.portraitZoom : opts.zoom) || 1;
     const heroVhNow   = () => Number(filmIsPortrait ? opts.portraitHeroVh : opts.heroVh) || opts.heroVh;
+    // The film's ending hold freezes a frame with a drop suspended mid-air, so the scrub stops on the last
+    // drop-free frame instead of running to the end of the file. Falls back to 1 (the old behaviour) if the
+    // option is missing or out of range, so nothing regresses for a film that never sets it.
+    const endProgNow  = () => { const v = Number(filmIsPortrait ? opts.portraitEndProg : opts.endProg); return (v > 0 && v <= 1) ? v : 1; };
     // The top band is only ever the landscape film's way of covering a tall screen. The portrait film fills it.
     const bandFit     = () => !filmIsPortrait && innerHeight > innerWidth;
     // The page's CSS keys the same decision off these classes: the band framing, the band-fade element and
@@ -247,11 +260,11 @@
       const zn = zonesNow(), z0 = startProg();
       // The scrub only ever runs forwards. If an intro hands over past the pour mark (introEnd set beyond
       // zones[0]) the pour zone would otherwise rewind, so each zone end is held at or after the one before.
-      const z1 = Math.max(zn[0], z0), z2 = Math.max(zn[1], z1);
-      if (!end) return lerp(z0, 1, clamp(y / maxScroll, 0, 1));
+      const z1 = Math.max(zn[0], z0), z2 = Math.max(zn[1], z1), z3 = Math.max(z2, endProgNow());
+      if (!end) return lerp(z0, z3, clamp(y / maxScroll, 0, 1));
       if (y <= zoneA) return lerp(z0, z1, clamp(y / zoneA, 0, 1));
       if (y <= zoneB) return lerp(z1, z2, (y - zoneA) / Math.max(1, zoneB - zoneA));
-      return lerp(z2, 1, clamp((y - zoneB) / Math.max(1, maxScroll - zoneB), 0, 1));
+      return lerp(z2, z3, clamp((y - zoneB) / Math.max(1, maxScroll - zoneB), 0, 1));
     }
 
     let target = scrollY, shown = scrollY, rafId = null, lastTick = 0, scrubOn = false, filmInited = false;
