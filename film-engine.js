@@ -150,13 +150,12 @@
 
   function init(root, opts) {
     opts = Object.assign({
-      videoSrc: 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5417655,
-      // Both films end on a hold, and the hold freezes a frame with a coffee drop suspended mid-air rather
-      // than the finished cup. endProg/portraitEndProg stop the scrub short of that frame: 0.9153 (~15.23s
-      // of 16.63s) is the landscape film's last completely drop-free instant, sitting in the gap after the
-      // stream breaks up and before the next drop enters frame. See portraitEndProg below for the portrait
-      // film's own value, which is not a clean gap the same way.
-      start: 0, zoom: 1.08, zones: [0.5645, 0.6899], introEnd: 0.3361, endProg: 0.9153,
+      videoSrc: 'assets/hero-film.mp4', posterSrc: 'assets/film-poster.jpg', videoBytes: 5868981,
+      // this take's tail actually settles: the drop lands in the cup by about 15.7s and only steam moves
+      // for the rest of the shot, so endProg just needs to sit inside that clear stretch rather than hunt
+      // for a single drop-free instant. 0.9796 (16.00s of 16.33s) sits mid-window, with roughly seven
+      // frames of settled footage on either side to absorb a one-frame seek error.
+      start: 0, zoom: 1.08, zones: [0.5434, 0.6454], introEnd: 0.3291, endProg: 0.9796,
       // The portrait film. Its own source, its own poster, its own byte count for the ring, its own mapping.
       portraitVideoSrc: 'assets/hero-film-portrait.mp4', portraitPosterSrc: 'assets/film-poster-portrait.jpg', portraitVideoBytes: 4056359,
       // portraitIntroEnd has to land inside the pour zone, below portraitZones[0], or the intro hands the
