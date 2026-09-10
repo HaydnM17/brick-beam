@@ -163,11 +163,11 @@
       // playhead over past the frame the hero scroll is aiming at and the hero has nothing left to scrub.
       // 0.1569 (~2.73s) lands safely past the drip becoming a continuous stream (~2.0s) and stays below
       // portraitZones[0] (0.4119, ~7.16s), which is where the hero's scrub range now ends.
-      // portraitEndProg (0.9733, ~16.92s of 17.38s) is not a clean gap like the landscape value above: this
-      // film's drip never fully clears frame before the next drop enters, so 16.9167s is the closest thing
-      // to one, the last frame with the trailing drop at its lowest, faintest, most-merged-with-the-crema
-      // point, one frame before the next drop appears at the top edge. Flagged for Haydn, not a real fix.
-      portraitStart: 0, portraitZoom: 1, portraitZones: [0.4119, 0.7366], portraitIntroEnd: 0.1569, portraitEndProg: 0.9733,
+      // portraitEndProg (0.9841, ~17.10s of 17.38s) still isn't a clean gap like the landscape value above:
+      // this film never fully clears, a bead stays clipped by the top edge of every frame from 16.96s
+      // onward, and the film's own ending hold freezes with it right there. 0.9841 sits in the middle of
+      // the window (16.9583s-17.2916s) where the air above the cup is empty and only that sliver remains.
+      portraitStart: 0, portraitZoom: 1, portraitZones: [0.4119, 0.7366], portraitIntroEnd: 0.1569, portraitEndProg: 0.9841,
       // The portrait hero is shorter than the landscape one (360vh): on a phone the same vh count means far
       // more physical scrolling, so portraitHeroVh trims it independently. Picked up the same way as
       // portraitZones/portraitIntroEnd above, through filmIsPortrait.
